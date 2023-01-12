@@ -1,0 +1,19 @@
+[package]
+name = "slackerbot"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [".", "entity", "migration"]
+
+[dependencies]
+anyhow = "1.0"
+serenity = { version = "0.11", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "model", "utils", "tokio", "rustls_backend"] }
+tokio = { version = "1.24", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Database
+sea-orm = { version = "0.10", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
+entity = { path = "./entity" }
+migration = { path = "./migration" }
