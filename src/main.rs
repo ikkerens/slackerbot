@@ -4,14 +4,23 @@ extern crate tracing;
 use std::env;
 
 use anyhow::{anyhow, Result};
-use sea_orm::{Database, DatabaseConnection};
-use serenity::{client::ClientBuilder, prelude::GatewayIntents, prelude::TypeMapKey};
+use sea_orm::Database;
+use serenity::{client::ClientBuilder, prelude::GatewayIntents};
+use tokio::select;
 use tracing_subscriber::filter::EnvFilter;
 
-use crate::handler::Handler;
 use migration::{Migrator, MigratorTrait};
 
+use crate::{
+	handler::Handler,
+	util::{wait_for_signal, DatabaseTypeMapKey},
+};
+
+mod commands;
 mod handler;
+mod ingest;
+mod quote;
+mod util;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -36,6 +45,7 @@ async fn main() -> Result<()> {
 			GatewayIntents::GUILD_MESSAGES | GatewayIntents::GUILD_MESSAGE_REACTIONS | GatewayIntents::MESSAGE_CONTENT,
 		)
 		.event_handler(Handler)
+		.cache_settings(|c| c.max_messages(100))
 		.await?
 	};
 
@@ -45,11 +55,15 @@ async fn main() -> Result<()> {
 	}
 
 	info!("Setup complete. Starting bot...");
-	Ok(discord_client.start_autosharded().await?)
-}
-
-pub(crate) struct DatabaseTypeMapKey;
-
-impl TypeMapKey for DatabaseTypeMapKey {
-	type Value = DatabaseConnection;
+	select! {
+		result = discord_client.start_autosharded() => {
+			Ok(result?)
+		}
+		interrupt = wait_for_signal() => {
+			if let Err(e) = interrupt {
+				error!("Could not register interrupt signals: {}", e);
+			}
+			Ok(())
+		}
+	}
 }

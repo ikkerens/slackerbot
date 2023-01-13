@@ -1,0 +1,66 @@
+use anyhow::Result;
+use chrono::FixedOffset;
+use sea_orm::{ActiveModelTrait, ActiveValue::Set};
+use serenity::{
+	client::Context,
+	model::{
+		channel::Message, guild::Member, id::ChannelId,
+		prelude::interaction::application_command::ApplicationCommandInteraction, Timestamp,
+	},
+};
+
+use entity::quote;
+
+use crate::{
+	quote::post_quote,
+	util::{channel_name, download_file, DatabaseTypeMapKey},
+};
+
+pub mod reaction;
+pub mod voice;
+
+async fn ingest(
+	ctx: &Context, member: &Member, channel_id: ChannelId, content: String, message: Option<Message>,
+	response: Option<ApplicationCommandInteraction>,
+) -> Result<()> {
+	let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
+
+	let avatar = Set(Some(download_file(&member.face()).await?));
+	let (attachment, attachment_name) = if let Some(attachment) = message.as_ref().and_then(|msg| {
+		msg.attachments.iter().find(|attachment| {
+			attachment.content_type.is_some() && attachment.content_type.as_ref().unwrap().starts_with("image/")
+		})
+	}) {
+		(
+			Set(Some(download_file(&attachment.url).await?)),
+			Set(Some(attachment.filename.clone())),
+		)
+	} else {
+		if content.trim().is_empty() {
+			return Ok(());
+		}
+		(Set(None), Set(None))
+	};
+
+	let inserted: quote::Model = quote::ActiveModel {
+		id: Default::default(),
+		server_id: Set(member.guild_id.0 as i64),
+		channel_id: Set(channel_id.0 as i64),
+		channel_name: Set(channel_name(ctx, channel_id).await?),
+		message_id: Set(message.as_ref().map(|msg| msg.id.0 as i64)),
+		timestamp: Set(message
+			.map(|m| m.timestamp)
+			.unwrap_or_else(Timestamp::now)
+			.with_timezone(&FixedOffset::east_opt(0).unwrap())),
+		author_id: Set(member.user.id.0 as i64),
+		author: Set(member.nick.as_ref().unwrap_or(&member.user.name).clone()),
+		text: Set(content),
+		author_image: avatar,
+		attachment,
+		attachment_name,
+	}
+	.insert(&db)
+	.await?;
+
+	post_quote(ctx, inserted, channel_id, response).await
+}

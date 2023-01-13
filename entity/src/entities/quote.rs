@@ -5,10 +5,20 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "quote")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub id: i32,
-    pub author: String,
-    pub text: String,
+	#[sea_orm(primary_key)]
+	pub id: i64,
+	pub server_id: i64,
+	pub channel_id: i64,
+	pub channel_name: String,
+	#[sea_orm(unique)]
+	pub message_id: Option<i64>,
+	pub author_id: i64,
+	pub author: String,
+	pub author_image: Option<Vec<u8>>,
+	pub timestamp: DateTimeWithTimeZone,
+	pub text: String,
+	pub attachment: Option<Vec<u8>>,
+	pub attachment_name: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

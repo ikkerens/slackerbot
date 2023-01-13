@@ -8,12 +8,17 @@ members = [".", "entity", "migration"]
 
 [dependencies]
 anyhow = "1.0"
-serenity = { version = "0.11", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "model", "utils", "tokio", "rustls_backend"] }
-tokio = { version = "1.24", features = ["macros", "rt-multi-thread"] }
+serenity = { version = "0.11", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "tokio", "rustls_backend"] }
+tokio = { version = "1.24", features = ["macros", "rt-multi-thread", "signal"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+reqwest = { version = "0.11", default-features = false, features = ["gzip", "rustls-tls"] }
+chrono = "0.4"
 
 # Database
 sea-orm = { version = "0.10", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
 entity = { path = "./entity" }
 migration = { path = "./migration" }
+
+[profile.release]
+lto = true
