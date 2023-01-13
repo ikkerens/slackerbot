@@ -1,5 +1,5 @@
 # Build configuration
-ARG project_name=binbot
+ARG project_name=slackerbot
 
 # Set up rust build environment
 FROM rust:1.66.1-alpine3.17 as build
@@ -19,6 +19,6 @@ RUN touch ./src/main.rs && cargo build --release
 FROM scratch
 ARG project_name
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /usr/src/target/*/release/$project_name ./$project_name
+COPY --from=build /usr/src/target/*/$project_name ./app
 USER 1000
-CMD ["./$project_name"]
+CMD ["./app"]
