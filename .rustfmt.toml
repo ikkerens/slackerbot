@@ -1,6 +1,6 @@
 edition = "2018"
-fn_args_layout = "Compressed"
-hard_tabs = true
+fn_args_layout = "Tall"
 max_width = 120
+use_small_heuristics = "Max"
 newline_style = "Unix"
 use_try_shorthand = true
