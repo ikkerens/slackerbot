@@ -5,7 +5,6 @@ ARG project_name=slackerbot
 FROM rust:1.66.1-alpine3.17 as build
 ARG project_name
 ENV USER=root
-ENV RUSTFLAGS="-C target-cpu=native"
 
 # Prepare build environment
 RUN apk add --no-cache musl-dev

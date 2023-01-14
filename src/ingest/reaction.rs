@@ -4,7 +4,11 @@ use serenity::{client::Context, model::channel::Reaction};
 
 use entity::{prelude::Quote, quote};
 
-use crate::{ingest::ingest, quote::post_quote, util::DatabaseTypeMapKey};
+use crate::{
+	ingest::{ingest, IngestMember},
+	quote::post_quote,
+	util::DatabaseTypeMapKey,
+};
 
 pub(crate) async fn handle(ctx: &Context, reaction: &Reaction) -> Result<()> {
 	let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
@@ -28,7 +32,19 @@ pub(crate) async fn handle(ctx: &Context, reaction: &Reaction) -> Result<()> {
 
 	// Nope, let's fetch the attachments, if any
 	let content = message.content_safe(ctx);
-	let member = message.member(ctx).await?;
+	let member = message.member(ctx).await.ok();
 
-	ingest(ctx, &member, reaction.channel_id, content, Some(message), None).await
+	let ingest_member = if let Some(member) = member {
+		member.into()
+	} else {
+		// If the person is no longer in the guild
+		IngestMember {
+			guild_id: message.guild_id.unwrap(),
+			user_id: message.author.id,
+			user_name: message.author.name.clone(),
+			avatar_url: message.author.face(),
+		}
+	};
+
+	ingest(ctx, ingest_member, reaction.channel_id, content, Some(message), None).await
 }

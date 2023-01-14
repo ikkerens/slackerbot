@@ -4,8 +4,11 @@ use sea_orm::{ActiveModelTrait, ActiveValue::Set};
 use serenity::{
 	client::Context,
 	model::{
-		channel::Message, guild::Member, id::ChannelId,
-		prelude::interaction::application_command::ApplicationCommandInteraction, Timestamp,
+		application::interaction::application_command::ApplicationCommandInteraction,
+		channel::Message,
+		guild::Member,
+		id::{ChannelId, GuildId, UserId},
+		Timestamp,
 	},
 };
 
@@ -20,12 +23,12 @@ pub mod reaction;
 pub mod voice;
 
 async fn ingest(
-	ctx: &Context, member: &Member, channel_id: ChannelId, content: String, message: Option<Message>,
+	ctx: &Context, member: IngestMember, channel_id: ChannelId, content: String, message: Option<Message>,
 	response: Option<ApplicationCommandInteraction>,
 ) -> Result<()> {
 	let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
-	let avatar = Set(Some(download_file(&member.face()).await?));
+	let avatar = Set(Some(download_file(&member.avatar_url).await?));
 	let (attachment, attachment_name) = if let Some(attachment) = message.as_ref().and_then(|msg| {
 		msg.attachments.iter().find(|attachment| {
 			attachment.content_type.is_some() && attachment.content_type.as_ref().unwrap().starts_with("image/")
@@ -52,8 +55,8 @@ async fn ingest(
 			.map(|m| m.timestamp)
 			.unwrap_or_else(Timestamp::now)
 			.with_timezone(&FixedOffset::east_opt(0).unwrap())),
-		author_id: Set(member.user.id.0 as i64),
-		author: Set(member.nick.as_ref().unwrap_or(&member.user.name).clone()),
+		author_id: Set(member.user_id.0 as i64),
+		author: Set(member.user_name),
 		text: Set(content),
 		author_image: avatar,
 		attachment,
@@ -63,4 +66,22 @@ async fn ingest(
 	.await?;
 
 	post_quote(ctx, inserted, channel_id, response).await
+}
+
+struct IngestMember {
+	guild_id: GuildId,
+	user_id: UserId,
+	user_name: String,
+	avatar_url: String,
+}
+
+impl From<Member> for IngestMember {
+	fn from(member: Member) -> Self {
+		Self {
+			guild_id: member.guild_id,
+			user_id: member.user.id,
+			user_name: member.nick.as_ref().unwrap_or(&member.user.name).clone(),
+			avatar_url: member.face(),
+		}
+	}
 }
