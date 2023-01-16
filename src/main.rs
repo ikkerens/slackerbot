@@ -1,12 +1,15 @@
 #[macro_use]
 extern crate tracing;
 
-use std::env;
+use std::{env, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use sea_orm::Database;
-use serenity::{client::ClientBuilder, prelude::GatewayIntents};
-use tokio::select;
+use serenity::{
+    client::{bridge::gateway::ShardManager, ClientBuilder},
+    prelude::GatewayIntents,
+};
+use tokio::sync::Mutex;
 use tracing_subscriber::filter::EnvFilter;
 
 use migration::{Migrator, MigratorTrait};
@@ -52,15 +55,15 @@ async fn main() -> Result<()> {
     }
 
     info!("Setup complete. Starting bot...");
-    select! {
-        result = discord_client.start_autosharded() => {
-            Ok(result?)
-        }
-        interrupt = wait_for_signal() => {
-            if let Err(e) = interrupt {
-                error!("Could not register interrupt signals: {}", e);
-            }
-            Ok(())
-        }
+    tokio::spawn(wait_for_shutdown(discord_client.shard_manager.clone()));
+    Ok(discord_client.start_autosharded().await?)
+}
+
+async fn wait_for_shutdown(shard_manager: Arc<Mutex<ShardManager>>) {
+    if let Err(e) = wait_for_signal().await {
+        error!("Could not register interrupt signals: {}", e);
+        return;
     }
+
+    shard_manager.lock().await.shutdown_all().await
 }

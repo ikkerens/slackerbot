@@ -3,7 +3,7 @@ use serenity::{
     model::{
         application::{interaction::Interaction, interaction::Interaction::ApplicationCommand},
         channel::{Reaction, ReactionType},
-        gateway::Ready,
+        gateway::{Activity, Ready},
     },
 };
 use tokio::join;
@@ -41,6 +41,8 @@ impl EventHandler for Handler {
         if let Err(e) = introduce_commands(&ctx).await {
             error!("Could not register global commands: {}", e);
         }
+
+        ctx.shard.set_activity(Some(Activity::playing("in therapy")))
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {

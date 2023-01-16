@@ -40,10 +40,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 }
 
 pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInteraction) -> Result<()> {
-    let guild_id = match cmd.guild_id {
-        Some(guild_id) => guild_id,
-        None => return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await,
-    };
+    let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
 
     let mut args = cmd.data.options.iter().map(|v| &v.resolved).filter_map(|v| v.as_ref());
     let Some(CommandDataOptionValue::User(user, _)) = args.next() else { return Err(anyhow!("Could not parse user for first value")) };

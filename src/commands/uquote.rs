@@ -28,10 +28,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 
 pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInteraction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let guild_id = match cmd.guild_id {
-        Some(guild_id) => guild_id.0 as i64,
-        None => return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await,
-    };
+    let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
     let user = match cmd.data.options.first().and_then(|id| id.resolved.clone()) {
         Some(CommandDataOptionValue::User(user, _)) => user,
         _ => return send_ephemeral_message(ctx, cmd, "No user received").await,
@@ -41,7 +38,7 @@ pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInterac
         .from_raw_sql(Statement::from_sql_and_values(
             db.get_database_backend(),
             r#"SELECT * FROM "quote" WHERE "server_id" = $1 AND "author_id" = $2 ORDER BY RANDOM() LIMIT 1"#,
-            vec![guild_id.into(), (user.id.0 as i64).into()],
+            vec![guild_id.0.into(), (user.id.0 as i64).into()],
         ))
         .one(&db)
         .await?;

@@ -5,10 +5,9 @@ use serenity::{
     model::{
         application::{
             command::{Command, CommandOptionType},
-            interaction::application_command::ApplicationCommandInteraction,
+            interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue},
         },
         permissions::Permissions,
-        prelude::interaction::application_command::CommandDataOptionValue,
     },
 };
 
@@ -35,10 +34,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 }
 
 pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInteraction) -> Result<()> {
-    let guild_id = match cmd.guild_id {
-        Some(guild_id) => guild_id,
-        None => return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await,
-    };
+    let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
 
     let permissions = match cmd.member.as_ref().and_then(|m| m.permissions) {
         Some(p) => p,
