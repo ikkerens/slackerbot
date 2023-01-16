@@ -20,20 +20,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for quote in quotes %}
+                    {{#each quotes}}
                     <tr>
-                        <td>{{ quote.id }}</td>
-                        <td>{{ quote.author }}</td>
-                        <td>{{ quote.channel_name }}</td>
-                        <td>{{ quote.text }}</td>
+                        <td>{{this.id}}</td>
+                        <td>{{this.author}}</td>
+                        <td>{{this.channel_name}}</td>
+                        <td>{{this.text}}</td>
                         <td>
-                            {% if quote.attachment_name %}
-                            <a href="/image/{{ quote.id }}/{{ quote.attachment_name }}">[Link to image]</a>
-                            {% endif %}
+                            {{#if this.attachment_name}}
+                            <a href="/image/{{this.id}}/{{this.attachment_name}}">[Link to image]</a>
+                            {{/if}}
                         </td>
-                        <td>{{ quote.timestamp | date(timezone="Europe/Amsterdam", format="%d/%m/%Y %H:%M") }}</td>
+                        <td>{{dateformat this.timestamp}}</td>
                     </tr>
-                    {% endfor %}
+                    {{/each}}
                 </tbody>
             </table>
         </div>

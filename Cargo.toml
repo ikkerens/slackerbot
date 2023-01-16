@@ -26,8 +26,9 @@ migration = { path = "./migration" }
 # Web
 actix-web = "4.2"
 actix-files = "0.6"
-tera = "1.17"
+handlebars = { version = "4.3", features = ["dir_source"] }
 serde = "1.0"
+serde_json = "1.0"
 
 [profile.release]
 lto = true

@@ -1,7 +1,8 @@
 use actix_web::{get, web::Data, HttpResponse, Responder};
-use entity::{prelude::Quote, quote};
 use sea_orm::{prelude::DateTimeWithTimeZone, DatabaseConnection, EntityTrait, FromQueryResult, QuerySelect};
-use tera::{Context, Tera};
+use serenity::json::json;
+
+use entity::{prelude::Quote, quote};
 
 #[derive(serde::Serialize, FromQueryResult)]
 struct ListQuote {
@@ -14,7 +15,7 @@ struct ListQuote {
 }
 
 #[get("/")]
-pub(super) async fn page(tera: Data<Tera>, db: Data<DatabaseConnection>) -> impl Responder {
+pub(super) async fn page(handlebars: Data<handlebars::Handlebars<'_>>, db: Data<DatabaseConnection>) -> impl Responder {
     let quotes = Quote::find()
         .select_only()
         .column(quote::Column::Id)
@@ -27,8 +28,6 @@ pub(super) async fn page(tera: Data<Tera>, db: Data<DatabaseConnection>) -> impl
         .all(db.get_ref())
         .await
         .unwrap();
-    let mut ctx = Context::new();
-    ctx.insert("quotes", &quotes);
-    let rendered = tera.render("index.html", &ctx).unwrap();
+    let rendered = handlebars.render("index", &json!({ "quotes": quotes })).unwrap();
     HttpResponse::Ok().body(rendered)
 }
