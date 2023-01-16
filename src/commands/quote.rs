@@ -17,7 +17,7 @@ use crate::{commands::send_ephemeral_message, quote::post_quote, util::DatabaseT
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_application_command(ctx, |command| {
-        command.name("quote").description("Posts a specific quote").create_option(|option| {
+        command.name("quote").description("Posts a specific quote").dm_permission(false).create_option(|option| {
             option
                 .name("id")
                 .description("A quote id (found in the bottom of the quote)")

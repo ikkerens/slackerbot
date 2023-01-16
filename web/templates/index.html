@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Slacker quotes</title>
+        <link rel="stylesheet" type="text/css" href="/css/style.css">
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+    </head>
+    <body>
+        <div id="main">
+            <h1>Slacker Quotes</h1>
+            <table id="quotes">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>User</th>
+                        <th>Channel</th>
+                        <th>Quote</th>
+                        <th>Image</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quote in quotes %}
+                    <tr>
+                        <td>{{ quote.id }}</td>
+                        <td>{{ quote.author }}</td>
+                        <td>{{ quote.channel_name }}</td>
+                        <td>{{ quote.text }}</td>
+                        <td>
+                            {% if quote.attachment_name %}
+                            <a href="/image/{{ quote.id }}/{{ quote.attachment_name }}">[Link to image]</a>
+                            {% endif %}
+                        </td>
+                        <td>{{ quote.timestamp | date(timezone="Europe/Amsterdam", format="%d/%m/%Y %H:%M") }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript">
+            window.jQuery(document).ready($ => {
+                $('#quotes').DataTable();
+            });
+        </script>
+    </body>
+</html>

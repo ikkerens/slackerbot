@@ -14,13 +14,17 @@ use crate::{commands::send_ephemeral_message, quote::post_quote, util::DatabaseT
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_application_command(ctx, |command| {
-        command.name("uquote").description("Posts a random command by the specified user").create_option(|option| {
-            option
-                .name("user")
-                .description("The user to get a random quote from")
-                .kind(CommandOptionType::User)
-                .required(true)
-        })
+        command
+            .name("uquote")
+            .description("Posts a random command by the specified user")
+            .dm_permission(false)
+            .create_option(|option| {
+                option
+                    .name("user")
+                    .description("The user to get a random quote from")
+                    .kind(CommandOptionType::User)
+                    .required(true)
+            })
     })
     .await?;
     Ok(())

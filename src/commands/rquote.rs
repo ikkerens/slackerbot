@@ -11,7 +11,7 @@ use crate::{commands::send_ephemeral_message, quote::post_quote, util::DatabaseT
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_application_command(ctx, |command| {
-        command.name("rquote").description("Posts a random quote")
+        command.name("rquote").description("Posts a random quote").dm_permission(false)
     })
     .await?;
     Ok(())

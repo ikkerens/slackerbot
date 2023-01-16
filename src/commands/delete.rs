@@ -21,6 +21,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
             .name("delete")
             .description("Deletes a specific quote")
             .default_member_permissions(Permissions::MANAGE_MESSAGES)
+            .dm_permission(false)
             .create_option(|option| {
                 option
                     .name("id")

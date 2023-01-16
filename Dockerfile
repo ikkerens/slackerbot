@@ -18,6 +18,7 @@ RUN touch ./src/main.rs && cargo build --release
 FROM scratch
 ARG project_name
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=build /usr/src/web ./web
 COPY --from=build /usr/src/target/*/$project_name ./app
 USER 1000
 CMD ["./app"]

@@ -17,6 +17,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
         command
             .name("voicequote")
             .description("Submits a quote said by someone in voice")
+            .dm_permission(false)
             .create_option(|option| {
                 option
                     .name("user")

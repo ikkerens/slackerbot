@@ -21,6 +21,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
             .name("purge")
             .description("Purges all quotes by the specified user")
             .default_member_permissions(Permissions::MANAGE_MESSAGES)
+            .dm_permission(false)
             .create_option(|option| {
                 option
                     .name("user")

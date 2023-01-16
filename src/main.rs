@@ -24,6 +24,7 @@ mod handler;
 mod ingest;
 mod quote;
 mod util;
+mod web;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -48,6 +49,8 @@ async fn main() -> Result<()> {
         .cache_settings(|c| c.max_messages(100))
         .await?
     };
+
+    web::start(database.clone())?;
 
     {
         let mut data = discord_client.data.write().await;

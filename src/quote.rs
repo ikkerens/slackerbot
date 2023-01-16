@@ -40,7 +40,7 @@ pub(crate) async fn post_quote<'a>(
     let embed = {
         let mut e = CreateEmbed::default();
         if image.is_some() {
-            e.attachment("attachment://".to_string() + &image_name);
+            e.image("attachment://".to_string() + &image_name);
         }
         e.author(|a| {
             if let Some(url) = avatar_url {
