@@ -2,7 +2,7 @@ use actix_files::Files;
 use actix_web::{web::Data, App, HttpServer};
 use anyhow::Result;
 use chrono::Local;
-use handlebars::{handlebars_helper, Handlebars};
+use handlebars::{handlebars_helper, html_escape, Handlebars};
 use sea_orm::{prelude::DateTimeWithTimeZone, DatabaseConnection};
 
 mod image;
@@ -14,6 +14,7 @@ pub(crate) fn start(db: DatabaseConnection) -> Result<()> {
     handlebars.set_dev_mode(true);
     handlebars.set_strict_mode(true);
     handlebars.register_helper("dateformat", Box::new(dateformat));
+    handlebars.register_helper("htmlescape", Box::new(htmlescape));
     handlebars.register_templates_directory(".hbs", "web/templates/")?;
 
     let actix = HttpServer::new(move || {
@@ -31,3 +32,4 @@ pub(crate) fn start(db: DatabaseConnection) -> Result<()> {
 }
 
 handlebars_helper!(dateformat: |v: DateTimeWithTimeZone| format!("{}", v.with_timezone(&Local).format("%d-%m-%Y %H:%M")));
+handlebars_helper!(htmlescape: |v: String| html_escape(&v));

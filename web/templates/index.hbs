@@ -2,8 +2,11 @@
 <html lang="en">
     <head>
         <title>Slacker quotes</title>
-        <link rel="stylesheet" type="text/css" href="/css/style.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" type="text/css" href="/css/style.css">
     </head>
     <body>
         <div id="main">
@@ -25,7 +28,7 @@
                         <td>{{this.id}}</td>
                         <td>{{this.author}}</td>
                         <td>{{this.channel_name}}</td>
-                        <td>{{this.text}}</td>
+                        <td>{{htmlescape this.text}}</td>
                         <td>
                             {{#if this.attachment_name}}
                             <a href="/image/{{this.id}}/{{this.attachment_name}}">[Link to image]</a>
