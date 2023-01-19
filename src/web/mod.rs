@@ -5,10 +5,11 @@ use chrono::Local;
 use handlebars::{handlebars_helper, html_escape, Handlebars};
 use sea_orm::{prelude::DateTimeWithTimeZone, DatabaseConnection};
 
+pub mod auth;
 mod image;
 mod index;
 
-pub(crate) fn start(db: DatabaseConnection) -> Result<()> {
+pub(crate) fn start(db: DatabaseConnection, auth: auth::Client) -> Result<()> {
     let mut handlebars = Handlebars::new();
     #[cfg(debug_assertions)]
     handlebars.set_dev_mode(true);
@@ -21,8 +22,12 @@ pub(crate) fn start(db: DatabaseConnection) -> Result<()> {
         App::new()
             .app_data(Data::new(db.clone()))
             .app_data(Data::new(handlebars.clone()))
+            .app_data(Data::new(auth.clone()))
             .service(index::page)
             .service(image::page)
+            .service(auth::oauth_redirect)
+            .service(auth::unauthorized)
+            .service(auth::logout)
             .service(Files::new("/", "./web/static"))
     })
     .bind(("0.0.0.0", 8080))?;

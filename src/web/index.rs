@@ -1,8 +1,10 @@
-use actix_web::{get, web::Data, HttpResponse, Responder};
+use actix_web::{get, web::Data, HttpRequest, HttpResponse};
 use sea_orm::{prelude::DateTimeWithTimeZone, DatabaseConnection, EntityTrait, FromQueryResult, QuerySelect};
 use serenity::json::json;
 
 use entity::{prelude::Quote, quote};
+
+use crate::web::auth;
 
 #[derive(serde::Serialize, FromQueryResult)]
 struct ListQuote {
@@ -15,7 +17,16 @@ struct ListQuote {
 }
 
 #[get("/")]
-pub(super) async fn page(handlebars: Data<handlebars::Handlebars<'_>>, db: Data<DatabaseConnection>) -> impl Responder {
+pub(super) async fn page(
+    req: HttpRequest,
+    auth: Data<auth::Client>,
+    handlebars: Data<handlebars::Handlebars<'_>>,
+    db: Data<DatabaseConnection>,
+) -> HttpResponse {
+    if let Some(response) = auth.verify(req).await {
+        return response;
+    }
+
     let quotes = Quote::find()
         .select_only()
         .column(quote::Column::Id)

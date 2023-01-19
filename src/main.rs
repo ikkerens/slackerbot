@@ -7,6 +7,7 @@ use anyhow::{anyhow, Result};
 use sea_orm::Database;
 use serenity::{
     client::{bridge::gateway::ShardManager, ClientBuilder},
+    model::id::GuildId,
     prelude::GatewayIntents,
 };
 use tokio::sync::Mutex;
@@ -17,6 +18,7 @@ use migration::{Migrator, MigratorTrait};
 use crate::{
     handler::Handler,
     util::{wait_for_signal, DatabaseTypeMapKey},
+    web::auth::Client,
 };
 
 mod commands;
@@ -50,7 +52,27 @@ async fn main() -> Result<()> {
         .await?
     };
 
-    web::start(database.clone())?;
+    {
+        let client_id = env::var("OAUTH_CLIENT").map_err(|_| anyhow!("No OAUTH_CLIENT env var"))?;
+        let client_secret = env::var("OAUTH_SECRET").map_err(|_| anyhow!("No OAUTH_SECRET env var"))?;
+        let redirect_uri = env::var("OAUTH_REDIRECT").map_err(|_| anyhow!("No OAUTH_REDIRECT env var"))?;
+        let jwt_secret = env::var("JWT_SECRET").map_err(|_| anyhow!("No JWT_SECRET env var"))?;
+        let web_whitelist_guild_id = GuildId(
+            env::var("WEB_WHITELIST_GUILD_ID")
+                .map_err(|_| anyhow!("No WEB_WHITELIST_GUILD_ID"))?
+                .parse::<u64>()
+                .map_err(|e| anyhow!("Could not parse guild id: {}", e))?,
+        );
+        let auth_client = Client::new(
+            client_id,
+            client_secret,
+            redirect_uri,
+            jwt_secret,
+            discord_client.cache_and_http.clone(),
+            web_whitelist_guild_id,
+        )?;
+        web::start(database.clone(), auth_client)?;
+    }
 
     {
         let mut data = discord_client.data.write().await;

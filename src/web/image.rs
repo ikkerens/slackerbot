@@ -1,10 +1,13 @@
 use actix_web::{
     get,
     web::{Data, Path},
-    HttpResponse, Responder,
+    HttpRequest, HttpResponse, Responder,
 };
-use entity::{prelude::Quote, quote};
 use sea_orm::{DatabaseConnection, EntityTrait, FromQueryResult, QuerySelect};
+
+use entity::{prelude::Quote, quote};
+
+use crate::web::auth;
 
 #[derive(FromQueryResult)]
 struct ImageRow {
@@ -12,7 +15,16 @@ struct ImageRow {
 }
 
 #[get("/image/{id}/{name}")]
-pub(super) async fn page(id: Path<(u64, String)>, db: Data<DatabaseConnection>) -> impl Responder {
+pub(super) async fn page(
+    req: HttpRequest,
+    auth: Data<auth::Client>,
+    id: Path<(u64, String)>,
+    db: Data<DatabaseConnection>,
+) -> impl Responder {
+    if let Some(response) = auth.verify(req).await {
+        return response;
+    }
+
     let quote = Quote::find_by_id(id.into_inner().0 as i64)
         .select_only()
         .column(quote::Column::Attachment)
