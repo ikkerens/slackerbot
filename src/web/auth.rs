@@ -50,16 +50,10 @@ impl Client {
     }
 
     pub async fn verify(&self, req: HttpRequest) -> Option<HttpResponse> {
-        debug!("Start1");
-        debug!("Cookies: {:#?}", req.cookies().unwrap());
         let Some(cookie) = req.cookie("token") else { return Some(self.generate_login_redirect()) };
-        debug!("Start2");
         let Ok(claims): Result<BTreeMap<String, String>, _> = cookie.value().verify_with_key(&self.key) else { return Some(self.generate_login_redirect()) };
-        debug!("Start3");
         let Some(user_id_str) = claims.get("user_id") else { return Some(self.generate_login_redirect()) };
-        debug!("Start4");
         let Ok(user_id) = user_id_str.parse::<UserId>() else {return Some(self.generate_login_redirect())};
-        debug!("Start5");
 
         if self.web_whitelist_guild_id.member(&self.discord, user_id).await.is_err() {
             return Some(HttpResponse::TemporaryRedirect().insert_header(("Location", "/bad")).body(""));
@@ -112,7 +106,6 @@ pub(super) async fn oauth_redirect(
 
     let mut claims = BTreeMap::new();
     claims.insert("user_id", user.id.to_string());
-    debug!("Making token with: {:#?}", claims);
     let Ok(token) = claims.sign_with_key(&auth.key) else { return bad_request("jwt_fail") };
 
     let mut cookie = Cookie::new("token", token);
