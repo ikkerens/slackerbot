@@ -1,5 +1,6 @@
 use std::{collections::BTreeMap, sync::Arc};
 
+use actix_web::http::header::ContentType;
 use actix_web::{cookie::Cookie, get, web, web::Data, HttpRequest, HttpResponse, Responder};
 use anyhow::Result;
 use hmac::{digest::KeyInit, Hmac};
@@ -122,6 +123,7 @@ pub(super) async fn oauth_redirect(
 #[get("/bad")]
 pub(super) async fn unauthorized() -> impl Responder {
     HttpResponse::Unauthorized()
+        .content_type(ContentType::html())
         .body(r#"You are not a member of the guild. <a href="/logout">Log out and try again with another account?</a>"#)
 }
 
