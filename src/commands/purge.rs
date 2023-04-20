@@ -34,7 +34,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
     let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
 
     let permissions = match cmd.member.as_ref().and_then(|m| m.permissions) {

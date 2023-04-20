@@ -40,7 +40,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
     let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
 
     let mut args = cmd.data.options.iter().map(|v| &v.resolved).filter_map(|v| v.as_ref());
@@ -52,6 +52,6 @@ pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInterac
         return send_ephemeral_message(ctx, cmd, "That channel is not a voice channel!").await;
     }
 
-    let member = guild_id.member(ctx, user.id).await?;
+    let member = guild_id.member(&ctx, user.id).await?;
     voice::handle(ctx, member, channel.id, content.to_owned(), cmd).await
 }

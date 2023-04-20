@@ -9,7 +9,7 @@ use serenity::{
 use crate::ingest::ingest;
 
 pub(crate) async fn handle(
-    ctx: &Context,
+    ctx: Context,
     member: Member,
     channel: ChannelId,
     content: String,

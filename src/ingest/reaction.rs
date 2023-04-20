@@ -10,7 +10,7 @@ use crate::{
     util::DatabaseTypeMapKey,
 };
 
-pub(crate) async fn handle(ctx: &Context, reaction: &Reaction) -> Result<()> {
+pub(crate) async fn handle(ctx: Context, reaction: &Reaction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
     let message = {
@@ -24,12 +24,12 @@ pub(crate) async fn handle(ctx: &Context, reaction: &Reaction) -> Result<()> {
     // Check if the quote already exists in our database, and if so, just post it
     let existing = Quote::find().filter(quote::Column::MessageId.eq(message.id.0)).one(&db).await?;
     if let Some(quote) = existing {
-        return post_quote(ctx, quote, reaction.channel_id, None).await;
+        return post_quote(&ctx, quote, reaction.channel_id, None).await;
     }
 
     // Nope, let's fetch the attachments, if any
-    let content = message.content_safe(ctx);
-    let member = message.member(ctx).await.ok();
+    let content = message.content_safe(&ctx);
+    let member = message.member(&ctx).await.ok();
 
     let ingest_member = if let Some(member) = member {
         member.into()

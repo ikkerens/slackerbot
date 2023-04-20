@@ -22,6 +22,7 @@ use crate::{
 };
 
 mod commands;
+mod db_integrity;
 mod handler;
 mod ingest;
 mod quote;
@@ -45,7 +46,10 @@ async fn main() -> Result<()> {
         let discord_token = env::var("DISCORD_TOKEN").map_err(|_| anyhow!("No DISCORD_TOKEN env var"))?;
         ClientBuilder::new(
             discord_token,
-            GatewayIntents::GUILD_MESSAGES | GatewayIntents::GUILD_MESSAGE_REACTIONS | GatewayIntents::MESSAGE_CONTENT,
+            GatewayIntents::GUILD_MESSAGES
+                | GatewayIntents::GUILD_MESSAGE_REACTIONS
+                | GatewayIntents::MESSAGE_CONTENT
+                | GatewayIntents::GUILDS,
         )
         .event_handler(Handler)
         .cache_settings(|c| c.max_messages(100))

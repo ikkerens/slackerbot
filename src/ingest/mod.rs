@@ -23,7 +23,7 @@ pub mod reaction;
 pub mod voice;
 
 async fn ingest(
-    ctx: &Context,
+    ctx: Context,
     member: IngestMember,
     channel_id: ChannelId,
     content: String,
@@ -50,7 +50,7 @@ async fn ingest(
         id: Default::default(),
         server_id: Set(member.guild_id.0 as i64),
         channel_id: Set(channel_id.0 as i64),
-        channel_name: Set(channel_name(ctx, channel_id).await?),
+        channel_name: Set(channel_name(&ctx, channel_id).await?),
         message_id: Set(message.as_ref().map(|msg| msg.id.0 as i64)),
         timestamp: Set(message
             .map(|m| m.timestamp)
@@ -66,7 +66,7 @@ async fn ingest(
     .insert(&db)
     .await?;
 
-    post_quote(ctx, inserted, channel_id, response).await
+    post_quote(&ctx, inserted, channel_id, response).await
 }
 
 struct IngestMember {

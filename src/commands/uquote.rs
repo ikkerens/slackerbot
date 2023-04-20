@@ -30,7 +30,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
     let user = match cmd.data.options.first().and_then(|id| id.resolved.clone()) {
@@ -48,7 +48,7 @@ pub(super) async fn handle_command(ctx: &Context, cmd: ApplicationCommandInterac
         .await?;
 
     match quote {
-        Some(quote) => post_quote(ctx, quote, cmd.channel_id, Some(cmd)).await,
+        Some(quote) => post_quote(&ctx, quote, cmd.channel_id, Some(cmd)).await,
         None => send_ephemeral_message(ctx, cmd, "Could not find any random quotes, do none exist?").await,
     }
 }
