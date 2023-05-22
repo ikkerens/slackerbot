@@ -49,7 +49,8 @@ async fn main() -> Result<()> {
             GatewayIntents::GUILD_MESSAGES
                 | GatewayIntents::GUILD_MESSAGE_REACTIONS
                 | GatewayIntents::MESSAGE_CONTENT
-                | GatewayIntents::GUILDS,
+                | GatewayIntents::GUILDS
+                | GatewayIntents::GUILD_MEMBERS,
         )
         .event_handler(Handler)
         .cache_settings(|c| c.max_messages(100))

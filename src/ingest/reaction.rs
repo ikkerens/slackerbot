@@ -27,7 +27,7 @@ pub(crate) async fn handle(ctx: Context, reaction: &Reaction) -> Result<()> {
         return post_quote(&ctx, quote, reaction.channel_id, None).await;
     }
 
-    // Nope, let's fetch the attachments, if any
+    // Nope, fetch the content and member, and move on.
     let content = message.content_safe(&ctx);
     let member = message.member(&ctx).await.ok();
 

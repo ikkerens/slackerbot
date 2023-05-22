@@ -45,7 +45,7 @@ impl EventHandler for Handler {
         }
     }
 
-    async fn ready(&self, ctx: Context, _ready_data: Ready) {
+    async fn ready(&self, ctx: Context, _ready: Ready) {
         info!("Bot connected!");
         if let Err(e) = introduce_commands(&ctx).await {
             error!("Could not register global commands: {}", e);
@@ -62,8 +62,13 @@ impl EventHandler for Handler {
                 }
             }
             MessageComponent(int) => {
-                if let Err(e) = rolebutton_pressed(ctx, int).await {
-                    error!("Could not handle button press: {}", e);
+                if int.data.custom_id.starts_with("rc_") {
+                    // Ignore
+                } else {
+                    // role_ or nothing
+                    if let Err(e) = rolebutton_pressed(ctx, int).await {
+                        error!("Could not handle button press: {}", e);
+                    }
                 }
             }
             _ => {}

@@ -113,7 +113,9 @@ async fn create_components(
                 cached_role.clone()
             }
         };
-        row.create_button(|button| button.custom_id(role_id).emoji(emoji).label(role.name.as_str()));
+        row.create_button(|button| {
+            button.custom_id(format!("role_{}", role_id)).emoji(emoji).label(role.name.as_str())
+        });
     }
     c.add_action_row(row);
     Ok(c)

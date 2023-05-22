@@ -10,6 +10,7 @@ use serenity::{
 mod delete;
 mod purge;
 mod quote;
+mod readycheck;
 mod rolebuttons;
 mod rquote;
 mod uquote;
@@ -22,6 +23,7 @@ pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     delete::register(ctx).await?;
     purge::register(ctx).await?;
     quote::register(ctx).await?;
+    readycheck::register(ctx).await?;
     rolebuttons::register(ctx).await?;
     rquote::register(ctx).await?;
     uquote::register(ctx).await?;
@@ -42,6 +44,7 @@ pub(crate) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
         "delete" => delete::handle_command(ctx, cmd).await,
         "purge" => purge::handle_command(ctx, cmd).await,
         "quote" => quote::handle_command(ctx, cmd).await,
+        "readycheck" => readycheck::handle_command(ctx, cmd).await,
         "rolebuttons" => rolebuttons::handle_command(ctx, cmd).await,
         "rquote" => rquote::handle_command(ctx, cmd).await,
         "uquote" => uquote::handle_command(ctx, cmd).await,

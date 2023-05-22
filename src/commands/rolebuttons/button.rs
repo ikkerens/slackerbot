@@ -23,7 +23,8 @@ pub(crate) async fn pressed(ctx: Context, mut interaction: MessageComponentInter
     let Some(server) =
         RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(member.guild_id.0 as i64)).one(&db).await? else { return Err(anyhow!("Button pressed for an unregistered server.")) };
 
-    let role_id = interaction.data.custom_id.parse::<RoleId>()?;
+    let role_id =
+        interaction.data.custom_id.strip_prefix("role_").unwrap_or(&interaction.data.custom_id).parse::<RoleId>()?;
     if !server.roles.contains(&(role_id.0 as i64)) {
         return Err(anyhow!("Role was requested that is not in the rolebuttons."));
     }
