@@ -9,6 +9,7 @@ use serenity::{
 
 mod cquote;
 mod delete;
+mod lamia;
 mod purge;
 mod quote;
 mod readycheck;
@@ -25,6 +26,7 @@ pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     delete::register(ctx).await?;
     purge::register(ctx).await?;
     quote::register(ctx).await?;
+    lamia::register(ctx).await?;
     readycheck::register(ctx).await?;
     rolebuttons::register(ctx).await?;
     rquote::register(ctx).await?;
@@ -47,6 +49,7 @@ pub(crate) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
         "delete" => delete::handle_command(ctx, cmd).await,
         "purge" => purge::handle_command(ctx, cmd).await,
         "quote" => quote::handle_command(ctx, cmd).await,
+        "days_since_lamia_horny" => lamia::handle_command(ctx, cmd).await,
         "readycheck" => readycheck::handle_command(ctx, cmd).await,
         "rolebuttons" => rolebuttons::handle_command(ctx, cmd).await,
         "rquote" => rquote::handle_command(ctx, cmd).await,
