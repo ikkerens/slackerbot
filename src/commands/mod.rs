@@ -7,6 +7,7 @@ use serenity::{
     },
 };
 
+mod cquote;
 mod delete;
 mod purge;
 mod quote;
@@ -20,6 +21,7 @@ pub(crate) use rolebuttons::button::pressed as rolebutton_pressed;
 pub(crate) use rolebuttons::post::check_for_update as rolebutton_post_check_for_update;
 
 pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
+    cquote::register(ctx).await?;
     delete::register(ctx).await?;
     purge::register(ctx).await?;
     quote::register(ctx).await?;
@@ -41,6 +43,7 @@ pub(crate) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
     );
 
     match cmd.data.name.as_str() {
+        "cquote" => cquote::handle_command(ctx, cmd).await,
         "delete" => delete::handle_command(ctx, cmd).await,
         "purge" => purge::handle_command(ctx, cmd).await,
         "quote" => quote::handle_command(ctx, cmd).await,
