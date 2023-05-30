@@ -8,12 +8,37 @@ use serenity::{
     },
     prelude::Mentionable,
 };
+use tokio::sync::broadcast::{self, error::RecvError};
 
 use entity::{prelude::RoleButtonServer, role_button_server};
 
 use crate::util::DatabaseTypeMapKey;
 
-pub(crate) async fn pressed(ctx: Context, mut interaction: MessageComponentInteraction) -> Result<()> {
+pub(crate) async fn press_loop(mut recv: broadcast::Receiver<(Context, MessageComponentInteraction)>) {
+    loop {
+        let (ctx, interaction) = match recv.recv().await {
+            Ok(interaction) => interaction,
+            Err(e) => {
+                if matches!(e, RecvError::Closed) {
+                    return;
+                }
+
+                error!("Error receiving interaction in role button loop: {e}");
+                continue;
+            }
+        };
+
+        if !interaction.data.custom_id.starts_with("role_") {
+            continue;
+        }
+
+        if let Err(e) = pressed(ctx, interaction).await {
+            error!("Could not handle role button press: {e}");
+        }
+    }
+}
+
+async fn pressed(ctx: Context, mut interaction: MessageComponentInteraction) -> Result<()> {
     let member = match &mut interaction.member {
         Some(member) => member,
         None => return Err(anyhow!("Interaction that did not come from a server.")),

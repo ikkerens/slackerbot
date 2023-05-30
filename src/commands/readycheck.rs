@@ -2,9 +2,6 @@ use std::{string::ToString, time::Duration};
 
 use anyhow::{anyhow, Result};
 use duration_str::parse;
-use serenity::model::mention::Mention;
-use serenity::model::prelude::ChannelId;
-use serenity::prelude::Mentionable;
 use serenity::{
     builder::CreateEmbed,
     client::Context,
@@ -17,22 +14,27 @@ use serenity::{
                 InteractionResponseType,
             },
         },
-        channel::{Message, ReactionType},
+        channel::ReactionType,
         guild::Member,
         id::EmojiId,
+        mention::Mention,
+        prelude::ChannelId,
         Permissions,
     },
+    prelude::Mentionable,
     utils::Colour,
 };
-use tokio::time::sleep;
 use tokio::{
     select,
-    time::{sleep_until, Instant},
+    time::{sleep, sleep_until, Instant},
 };
 
-use crate::commands::{
-    readycheck::ReadyState::{NotReady, Ready, Unknown},
-    send_ephemeral_message,
+use crate::{
+    commands::{
+        readycheck::ReadyState::{NotReady, Ready, Unknown},
+        send_ephemeral_message,
+    },
+    handler::Handler,
 };
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
@@ -56,7 +58,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(handler: &Handler, ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
     let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
 
     // Parse the arguments
@@ -86,23 +88,32 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
 
     members_with_role.sort_by_key(|(member, _)| member.user.name.to_owned());
 
+    // Subscribe to component interaction events
+    let mut recv = handler.subscribe_to_component_interactions();
+    let interaction_prefix = format!("rc_{}_", cmd.id);
+
     // Send the initial message with the buttons attached
     cmd.create_interaction_response(&ctx, |response| {
         response.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|data| {
             data.add_embed(create_embed(&role.name, &members_with_role, false)).components(|c| {
                 c.create_action_row(|r| {
                     r.create_button(|b| {
-                        b.emoji(Ready.to_emoji()).label("Ready").custom_id("rc_1").style(ButtonStyle::Success)
+                        b.emoji(Ready.to_emoji())
+                            .label("Ready")
+                            .custom_id(format!("{interaction_prefix}1"))
+                            .style(ButtonStyle::Success)
                     })
                     .create_button(|b| {
-                        b.emoji(NotReady.to_emoji()).label("Not ready").custom_id("rc_0").style(ButtonStyle::Danger)
+                        b.emoji(NotReady.to_emoji())
+                            .label("Not ready")
+                            .custom_id(format!("{interaction_prefix}0"))
+                            .style(ButtonStyle::Danger)
                     })
                 })
             })
         })
     })
     .await?;
-    let msg: Message = cmd.get_interaction_response(&ctx).await?;
 
     tokio::spawn(shadow_ping(ctx.clone(), role.mention(), cmd.channel_id));
 
@@ -110,48 +121,56 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
     let mut needs_update = false;
     loop {
         // Now we wait for either someone to press a button, or for the readycheck to expire
-        let interaction = select! {
-            interaction = msg.await_component_interaction(&ctx.shard) => {
-                interaction
+        let (interaction_ctx, interaction) = select! {
+            interaction = recv.recv() => {
+                match interaction {
+                    Ok(interaction) => interaction,
+                    Err(e) => {
+                        error!("Error receiving interaction in readycheck loop: {e}");
+                        continue;
+                    }
+                }
             },
             _ = sleep_until(end_time) => {
                 break
             }
         };
 
-        if let Some(interaction) = interaction {
-            let status = members_with_role.iter_mut().find(|(member, _)| member.user.id == interaction.user.id);
-            if let Some((_, status)) = status {
-                // Someone pressed a button, and they're part of the readycheck, mark them.
-                let new_state = match interaction.data.custom_id.as_str() {
-                    "rc_1" => Ready,
-                    "rc_0" => NotReady,
-                    _ => continue,
-                };
-                *status = new_state;
-                needs_update = true;
-                if let Err(e) = interaction
-                    .create_interaction_response(&ctx, |r| r.kind(InteractionResponseType::UpdateMessage))
-                    .await
-                {
-                    error!("Could not send button confirmation to user for readycheck: {e}");
-                }
-            } else {
-                // Someone who isn't part of the readycheck pressed the button, send them an error.
-                let ctx = ctx.clone();
-                tokio::spawn(async move {
-                    let result = interaction
-                        .create_interaction_response(ctx, |f| {
-                            f.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(
-                                |data| data.ephemeral(true).title("Error!").content("This readycheck is not for you!"),
-                            )
-                        })
-                        .await;
-                    if let Err(e) = result {
-                        error!("Could not reply to non-readycheck user replying to readycheck: {e}");
-                    }
-                });
+        // Check if that interaction belongs to this readycheck
+        let status_str = match interaction.data.custom_id.strip_prefix(&interaction_prefix) {
+            Some(str) => str,
+            None => continue,
+        };
+
+        let status = members_with_role.iter_mut().find(|(member, _)| member.user.id == interaction.user.id);
+        if let Some((_, status)) = status {
+            // Someone pressed a button, and they're part of the readycheck, mark them.
+            let new_state = match status_str {
+                "1" => Ready,
+                "0" => NotReady,
+                _ => continue,
+            };
+            *status = new_state;
+            needs_update = true;
+            if let Err(e) =
+                interaction.create_interaction_response(&ctx, |r| r.kind(InteractionResponseType::UpdateMessage)).await
+            {
+                error!("Could not send button confirmation to user for readycheck: {e}");
             }
+        } else {
+            // Someone who isn't part of the readycheck pressed the button, send them an error.
+            tokio::spawn(async move {
+                let result = interaction
+                    .create_interaction_response(interaction_ctx, |f| {
+                        f.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|data| {
+                            data.ephemeral(true).title("Error!").content("This readycheck is not for you!")
+                        })
+                    })
+                    .await;
+                if let Err(e) = result {
+                    error!("Could not reply to non-readycheck user replying to readycheck: {e}");
+                }
+            });
         }
 
         if needs_update {

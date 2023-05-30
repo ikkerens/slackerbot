@@ -1,24 +1,41 @@
 use serenity::{
     client::{Context, EventHandler},
     model::{
-        application::interaction::Interaction::{self, ApplicationCommand, MessageComponent},
+        application::interaction::{
+            message_component::MessageComponentInteraction,
+            Interaction::{self, ApplicationCommand, MessageComponent},
+        },
         channel::{Reaction, ReactionType},
         gateway::{Activity, Ready},
         guild::Role,
         id::{GuildId, RoleId},
     },
 };
-use tokio::join;
+use tokio::{join, sync::broadcast};
 
 use crate::{
-    commands::{handle_command, introduce_commands, rolebutton_pressed},
+    commands::{handle_command, introduce_commands, rolebutton_press_loop},
     db_integrity,
     ingest::reaction,
 };
 
-pub(crate) struct Handler;
-
 const QUOTE_REACTION: &str = "💬";
+
+pub(crate) struct Handler {
+    component_interactions: broadcast::Sender<(Context, MessageComponentInteraction)>,
+}
+
+impl Handler {
+    pub fn new() -> Self {
+        let (sender, recv) = broadcast::channel(16);
+        tokio::spawn(rolebutton_press_loop(recv));
+        Self { component_interactions: sender }
+    }
+
+    pub fn subscribe_to_component_interactions(&self) -> broadcast::Receiver<(Context, MessageComponentInteraction)> {
+        self.component_interactions.subscribe()
+    }
+}
 
 #[serenity::async_trait]
 impl EventHandler for Handler {
@@ -57,18 +74,13 @@ impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         match interaction {
             ApplicationCommand(cmd) => {
-                if let Err(e) = handle_command(ctx, cmd).await {
+                if let Err(e) = handle_command(self, ctx, cmd).await {
                     error!("Could not handle command: {}", e);
                 }
             }
             MessageComponent(int) => {
-                if int.data.custom_id.starts_with("rc_") {
-                    // Ignore
-                } else {
-                    // role_ or nothing
-                    if let Err(e) = rolebutton_pressed(ctx, int).await {
-                        error!("Could not handle button press: {}", e);
-                    }
+                if let Err(e) = self.component_interactions.send((ctx, int)) {
+                    error!("Could not handle component interaction: {e}");
                 }
             }
             _ => {}

@@ -52,7 +52,7 @@ async fn main() -> Result<()> {
                 | GatewayIntents::GUILDS
                 | GatewayIntents::GUILD_MEMBERS,
         )
-        .event_handler(Handler)
+        .event_handler(Handler::new())
         .cache_settings(|c| c.max_messages(100))
         .await?
     };

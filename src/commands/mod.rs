@@ -18,7 +18,8 @@ mod rquote;
 mod uquote;
 mod voicequote;
 
-pub(crate) use rolebuttons::button::pressed as rolebutton_pressed;
+use crate::handler::Handler;
+pub(crate) use rolebuttons::button::press_loop as rolebutton_press_loop;
 pub(crate) use rolebuttons::post::check_for_update as rolebutton_post_check_for_update;
 
 pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
@@ -35,7 +36,7 @@ pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-pub(crate) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
     info!(
         "Received command from {}#{}: /{} {}",
         cmd.user.name,
@@ -50,7 +51,7 @@ pub(crate) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
         "purge" => purge::handle_command(ctx, cmd).await,
         "quote" => quote::handle_command(ctx, cmd).await,
         "days_since_lamia_horny" => lamia::handle_command(ctx, cmd).await,
-        "readycheck" => readycheck::handle_command(ctx, cmd).await,
+        "readycheck" => readycheck::handle_command(handler, ctx, cmd).await,
         "rolebuttons" => rolebuttons::handle_command(ctx, cmd).await,
         "rquote" => rquote::handle_command(ctx, cmd).await,
         "uquote" => uquote::handle_command(ctx, cmd).await,
