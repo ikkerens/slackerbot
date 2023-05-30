@@ -14,7 +14,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Discord
-serenity = { version = "0.11", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "collector", "utils", "chrono", "tokio", "rustls_backend"] }
+serenity = { version = "0.11", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "tokio", "rustls_backend"] }
 reqwest = { version = "0.11", default-features = false, features = ["gzip", "rustls-tls"] }
 chrono = "0.4"
 
