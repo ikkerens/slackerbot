@@ -21,6 +21,11 @@ pub(crate) async fn handle(ctx: Context, reaction: &Reaction) -> Result<()> {
         message
     };
 
+    // If the message is from a bot ignore it
+    if message.author.bot {
+        return Ok(());
+    }
+
     // Check if the quote already exists in our database, and if so, just post it
     let existing = Quote::find().filter(quote::Column::MessageId.eq(message.id.0)).one(&db).await?;
     if let Some(quote) = existing {

@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serenity::{
@@ -10,14 +12,21 @@ use serenity::{
         channel::Message,
     },
 };
+use tokio::sync::Mutex;
 
 use crate::util::{kvstore, DatabaseTypeMapKey};
 
 static COUNTER_KEY: &str = "ccounter";
+static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 pub(crate) async fn handle_ingress(ctx: &Context, msg: &Message) -> Result<()> {
+    // Filter out bot messages
+    if msg.author.bot {
+        return Ok(());
+    }
+
     // Filter out all non-alphabetic characters
-    let phrase = msg.content.chars().filter(|c| c.is_ascii_alphabetic()).collect::<String>();
+    let phrase = msg.content.chars().filter(|c| matches!(*c, 'A'..='Z' | 'a'..='z' | ' ')).collect::<String>();
     // Lowercase, for easy filtering
     let phrase = phrase.to_lowercase();
     // Split into words
@@ -29,6 +38,8 @@ pub(crate) async fn handle_ingress(ctx: &Context, msg: &Message) -> Result<()> {
     }
 
     // We found the word, we increase the counter.
+    let _guard = LOCK.get_or_init(|| Mutex::new(())).lock().await;
+
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let mut counter = match kvstore::get::<CCounter>(&db, COUNTER_KEY).await? {
         Some(counter) => counter,

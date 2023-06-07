@@ -196,7 +196,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2",
- "time 0.3.21",
+ "time 0.3.22",
  "url",
 ]
 
@@ -819,7 +819,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
 dependencies = [
  "percent-encoding",
- "time 0.3.21",
+ "time 0.3.22",
  "version_check",
 ]
 
@@ -961,7 +961,7 @@ dependencies = [
  "rust_decimal",
  "serde",
  "thiserror",
- "time 0.3.21",
+ "time 0.3.22",
 ]
 
 [[package]]
@@ -2389,7 +2389,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "thiserror",
- "time 0.3.21",
+ "time 0.3.22",
  "tracing",
  "url",
  "uuid",
@@ -2452,7 +2452,7 @@ dependencies = [
  "rust_decimal",
  "sea-query-derive",
  "serde_json",
- "time 0.3.21",
+ "time 0.3.22",
  "uuid",
 ]
 
@@ -2468,7 +2468,7 @@ dependencies = [
  "sea-query",
  "serde_json",
  "sqlx",
- "time 0.3.21",
+ "time 0.3.22",
  "uuid",
 ]
 
@@ -2632,7 +2632,7 @@ dependencies = [
  "serde",
  "serde-value",
  "serde_json",
- "time 0.3.21",
+ "time 0.3.22",
  "tokio",
  "tracing",
  "typemap_rev",
@@ -2839,7 +2839,7 @@ dependencies = [
  "sqlx-rt",
  "stringprep",
  "thiserror",
- "time 0.3.21",
+ "time 0.3.22",
  "tokio-stream",
  "url",
  "uuid",
@@ -2990,9 +2990,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.21"
+version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f3403384eaacbca9923fa06940178ac13e4edb725486d70e8e15881d0c836cc"
+checksum = "ea9e1b3cf1243ae005d9e74085d4d542f3125458f3a81af210d901dcd7411efd"
 dependencies = [
  "itoa",
  "serde",
