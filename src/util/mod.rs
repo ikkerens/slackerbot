@@ -12,6 +12,8 @@ use serenity::{
 };
 use tokio::select;
 
+pub mod kvstore;
+
 pub(crate) async fn channel_name(ctx: &Context, id: ChannelId) -> Result<String> {
     if let Channel::Guild(channel) = id.to_channel(&ctx).await? {
         Ok(channel.name)

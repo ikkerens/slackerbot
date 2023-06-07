@@ -5,7 +5,7 @@ use serenity::{
             message_component::MessageComponentInteraction,
             Interaction::{self, ApplicationCommand, MessageComponent},
         },
-        channel::{Reaction, ReactionType},
+        channel::{Message, Reaction, ReactionType},
         gateway::{Activity, Ready},
         guild::Role,
         id::{GuildId, RoleId},
@@ -14,7 +14,7 @@ use serenity::{
 use tokio::{join, sync::broadcast};
 
 use crate::{
-    commands::{handle_command, introduce_commands, rolebutton_press_loop},
+    commands::{handle_ccounter_ingress, handle_command, introduce_commands, rolebutton_press_loop},
     db_integrity,
     ingest::reaction,
 };
@@ -42,6 +42,12 @@ impl EventHandler for Handler {
     async fn guild_role_delete(&self, ctx: Context, guild_id: GuildId, role_id: RoleId, _old_role: Option<Role>) {
         if let Err(e) = db_integrity::guild_role_delete(ctx, guild_id, role_id).await {
             error!("Could not perform DB integrity on role deletion: {}", e);
+        }
+    }
+
+    async fn message(&self, ctx: Context, msg: Message) {
+        if let Err(e) = handle_ccounter_ingress(&ctx, &msg).await {
+            error!("Could not handle ccounter ingress: {}", e);
         }
     }
 

@@ -7,6 +7,7 @@ use serenity::{
     },
 };
 
+mod ccounter;
 mod cquote;
 mod delete;
 mod lamia;
@@ -19,10 +20,12 @@ mod uquote;
 mod voicequote;
 
 use crate::handler::Handler;
+pub(crate) use ccounter::handle_ingress as handle_ccounter_ingress;
 pub(crate) use rolebuttons::button::press_loop as rolebutton_press_loop;
 pub(crate) use rolebuttons::post::check_for_update as rolebutton_post_check_for_update;
 
 pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
+    ccounter::register(ctx).await?;
     cquote::register(ctx).await?;
     delete::register(ctx).await?;
     purge::register(ctx).await?;
@@ -46,6 +49,7 @@ pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: Applica
     );
 
     match cmd.data.name.as_str() {
+        "cum" => ccounter::handle_command(ctx, cmd).await,
         "cquote" => cquote::handle_command(ctx, cmd).await,
         "delete" => delete::handle_command(ctx, cmd).await,
         "purge" => purge::handle_command(ctx, cmd).await,

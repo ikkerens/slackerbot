@@ -2,7 +2,7 @@
 ARG project_name=slackerbot
 
 # Set up rust build environment
-FROM rust:1.69.0-alpine3.17 as build
+FROM rust:1.70.0-alpine3.18 as build
 ARG project_name
 ENV USER=root
 

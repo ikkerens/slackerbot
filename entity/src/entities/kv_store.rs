@@ -3,16 +3,11 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "role_button_server")]
+#[sea_orm(table_name = "kv_store")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub id: i64,
-    #[sea_orm(unique)]
-    pub server_id: i64,
-    pub post_channel_id: Option<i64>,
-    pub post_message_id: Option<i64>,
-    pub roles: Vec<i64>,
-    pub role_emojis: Vec<String>,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub key: String,
+    pub value: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
