@@ -21,14 +21,11 @@ use crate::{
 
 pub(super) async fn handle(ctx: Context, cmd: ApplicationCommandInteraction, guild_id: GuildId) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let mut server = match RoleButtonServer::find()
-        .filter(role_button_server::Column::ServerId.eq(guild_id.0 as i64))
-        .one(&db)
-        .await?
-    {
-        Some(server) => server.into_active_model(),
-        None => return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await,
-    };
+    let mut server =
+        match RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.0)).one(&db).await? {
+            Some(server) => server.into_active_model(),
+            None => return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await,
+        };
     let Some(CommandDataOptionValue::Role(role)) = cmd.data.options.get(0).and_then(|o| o.options.get(0)).and_then(|r| r.resolved.as_ref()) else { return send_ephemeral_message(ctx, cmd, "Could not parse role.").await };
 
     let mut roles = match server.roles.take() {

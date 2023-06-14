@@ -53,8 +53,8 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
     Quote::delete_many()
-        .filter(quote::Column::AuthorId.eq(user.id.0 as i64))
-        .filter(quote::Column::ServerId.eq(guild_id.0 as i64))
+        .filter(quote::Column::AuthorId.eq(user.id.0))
+        .filter(quote::Column::ServerId.eq(guild_id.0))
         .exec(&db)
         .await?;
     send_ephemeral_message(ctx, cmd, &format!("Quotes by {}#{} deleted!", user.name, user.discriminator)).await

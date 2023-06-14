@@ -11,14 +11,11 @@ use crate::{commands::rolebutton_post_check_for_update, util::DatabaseTypeMapKey
 
 pub(crate) async fn guild_role_delete(ctx: Context, guild_id: GuildId, role_id: RoleId) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let mut server = match RoleButtonServer::find()
-        .filter(role_button_server::Column::ServerId.eq(guild_id.0 as i64))
-        .one(&db)
-        .await?
-    {
-        Some(server) => server.into_active_model(),
-        None => return Ok(()),
-    };
+    let mut server =
+        match RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.0)).one(&db).await? {
+            Some(server) => server.into_active_model(),
+            None => return Ok(()),
+        };
 
     let mut roles = match server.roles.take() {
         Some(roles) => roles,

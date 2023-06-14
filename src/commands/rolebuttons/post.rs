@@ -26,7 +26,7 @@ pub(super) async fn handle(
 ) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let Some(server) =
-        RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.0 as i64)).one(&db).await? else { return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await };
+        RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.0)).one(&db).await? else { return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await };
 
     let existing_message = match server.post_channel_id.zip(server.post_message_id) {
         Some((channel, message)) => ChannelId(channel as u64).message(&ctx, message as u64).await.ok(),

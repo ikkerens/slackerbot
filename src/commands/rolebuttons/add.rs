@@ -24,14 +24,11 @@ use crate::{
 
 pub(super) async fn handle(ctx: Context, cmd: ApplicationCommandInteraction, guild_id: GuildId) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let mut server = match RoleButtonServer::find()
-        .filter(role_button_server::Column::ServerId.eq(guild_id.0 as i64))
-        .one(&db)
-        .await?
-    {
-        Some(server) => server.into_active_model(),
-        None => role_button_server::ActiveModel { server_id: Set(guild_id.0 as i64), ..Default::default() },
-    };
+    let mut server =
+        match RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.0)).one(&db).await? {
+            Some(server) => server.into_active_model(),
+            None => role_button_server::ActiveModel { server_id: Set(guild_id.0 as i64), ..Default::default() },
+        };
     let args = cmd.data.options.get(0).map(|o| &o.options);
     let Some(CommandDataOptionValue::Role(role)) = args.and_then(|o| o.get(0)).and_then(|r| r.resolved.as_ref()) else { return send_ephemeral_message(ctx, cmd, "Could not parse role.").await };
     let Some(CommandDataOptionValue::String(emoji)) = args.and_then(|o| o.get(1)).and_then(|r| r.resolved.as_ref()) else { return send_ephemeral_message(ctx, cmd, "Could not parse emoji.").await };

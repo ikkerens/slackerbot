@@ -1,13 +1,19 @@
-use anyhow::Result;
-use sea_orm::{ConnectionTrait, EntityTrait, Statement};
+use std::{collections::VecDeque, sync::OnceLock};
+
+use anyhow::{anyhow, Result};
+use rand::{seq::IteratorRandom, thread_rng};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serenity::{
     client::Context,
     model::application::{command::Command, interaction::application_command::ApplicationCommandInteraction},
 };
+use tokio::sync::Mutex;
 
-use entity::prelude::Quote;
+use entity::{prelude::Quote, quote};
 
 use crate::{commands::send_ephemeral_message, quote::post_quote, util::DatabaseTypeMapKey};
+
+static RANDOM_BLACKLIST: OnceLock<Mutex<VecDeque<i64>>> = OnceLock::new();
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_application_command(ctx, |command| {
@@ -19,19 +25,40 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 
 pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
+    let Some(guild_id) = cmd.guild_id else { return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await };
 
-    let quote = Quote::find()
-        .from_raw_sql(Statement::from_sql_and_values(
-            db.get_database_backend(),
-            r#"SELECT * FROM "quote" WHERE "server_id" = $1 ORDER BY RANDOM() LIMIT 1"#,
-            vec![guild_id.0.into()],
-        ))
-        .one(&db)
+    // First we find a collection of IDs we can choose from
+    let ids: Vec<i64> = Quote::find()
+        .select_only()
+        .column(quote::Column::Id)
+        .filter(quote::Column::ServerId.eq(guild_id.0))
+        .into_tuple()
+        .all(&db)
         .await?;
+
+    // Then we get the blacklist, to avoid quote repeats
+    let mut blacklist = RANDOM_BLACKLIST.get_or_init(Default::default).lock().await;
+
+    // Then we filter our id list and choose a random quote
+    let Some(chosen_random) = ids.iter().filter(|v| !blacklist.contains(*v)).choose(&mut thread_rng()) else {
+        drop(blacklist); // Drop our blacklist reference early
+        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes, do none exist?").await
+    };
+
+    // Update our blacklist
+    blacklist.push_back(*chosen_random);
+    if blacklist.len() as f32 > (ids.len() as f32 / 10f32).floor() {
+        blacklist.pop_front();
+    }
+
+    // Drop our lock on the blacklist
+    drop(blacklist);
+
+    // And fetch the quote that belongs to that
+    let quote = Quote::find_by_id(*chosen_random).one(&db).await?;
 
     match quote {
         Some(quote) => post_quote(&ctx, quote, cmd.channel_id, Some(cmd)).await,
-        None => send_ephemeral_message(ctx, cmd, "Could not find any random quotes, do none exist?").await,
+        None => Err(anyhow!("Selected random quote that ended up not existing")),
     }
 }

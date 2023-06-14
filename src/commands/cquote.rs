@@ -1,5 +1,6 @@
-use anyhow::Result;
-use sea_orm::{ConnectionTrait, EntityTrait, Statement};
+use anyhow::{anyhow, Result};
+use rand::{seq::SliceRandom, thread_rng};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serenity::{
     client::Context,
     model::application::{
@@ -8,7 +9,7 @@ use serenity::{
     },
 };
 
-use entity::prelude::Quote;
+use entity::{prelude::Quote, quote};
 
 use crate::{commands::send_ephemeral_message, quote::post_quote, util::DatabaseTypeMapKey};
 
@@ -39,19 +40,22 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
         _ => return send_ephemeral_message(ctx, cmd, "No channel received").await,
     };
 
-    let quote = Quote::find()
-        .from_raw_sql(Statement::from_sql_and_values(
-            db.get_database_backend(),
-            r#"SELECT * FROM "quote" WHERE "server_id" = $1 AND "channel_id" = $2 ORDER BY RANDOM() LIMIT 1"#,
-            vec![guild_id.0.into(), (channel.0 as i64).into()],
-        ))
-        .one(&db)
+    let ids: Vec<i64> = Quote::find()
+        .select_only()
+        .column(quote::Column::Id)
+        .filter(quote::Column::ServerId.eq(guild_id.0))
+        .filter(quote::Column::ChannelId.eq(channel.0))
+        .into_tuple()
+        .all(&db)
         .await?;
+    let Some(chosen_random) = ids.choose(&mut thread_rng()) else {
+        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes for that channel, do none exist?").await
+    };
+
+    let quote = Quote::find_by_id(*chosen_random).one(&db).await?;
 
     match quote {
         Some(quote) => post_quote(&ctx, quote, cmd.channel_id, Some(cmd)).await,
-        None => {
-            send_ephemeral_message(ctx, cmd, "Could not find any random quotes for that channel, do none exist?").await
-        }
+        None => Err(anyhow!("Selected random channel quote that ended up not existing")),
     }
 }

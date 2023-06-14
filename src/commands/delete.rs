@@ -53,6 +53,6 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
 
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
-    Quote::delete_by_id(id).filter(quote::Column::ServerId.eq(guild_id.0 as i64)).exec(&db).await?;
+    Quote::delete_by_id(id).filter(quote::Column::ServerId.eq(guild_id.0)).exec(&db).await?;
     send_ephemeral_message(ctx, cmd, &format!("Quote with id {} deleted!", id)).await
 }
