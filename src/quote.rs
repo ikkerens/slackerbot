@@ -32,7 +32,11 @@ pub(crate) async fn post_quote<'a>(
 
     let channel_name =
         if let Ok(Channel::Guild(guild_channel)) = ChannelId(quote.channel_id as u64).to_channel(&ctx).await {
-            guild_channel.mention().to_string()
+            if let Some(message_id) = quote.message_id {
+                format!("https://discord.com/channels/{}/{}/{}", quote.server_id, quote.channel_id, message_id)
+            } else {
+                guild_channel.mention().to_string()
+            }
         } else {
             format!("#{}", quote.channel_name)
         };
@@ -42,13 +46,17 @@ pub(crate) async fn post_quote<'a>(
         if image.is_some() {
             e.image("attachment://".to_string() + &image_name);
         }
+        if quote.text.trim().is_empty() {
+            e.description(channel_name);
+        } else {
+            e.description(format!("{} - {channel_name}", quote.text));
+        }
         e.author(|a| {
             if let Some(url) = avatar_url {
                 a.icon_url(url);
             }
             a.name(quote.author)
         })
-        .description(format!("{} - {}", quote.text, channel_name))
         .footer(|footer| footer.text(format!("Id: {}", quote.id)))
         .colour(Colour::FABLED_PINK)
         .timestamp(quote.timestamp);
