@@ -3,6 +3,7 @@ pub use sea_orm_migration::prelude::*;
 mod m20220101_000001_create_table;
 mod m20230329_110119_rolebuttons;
 mod m20230607_114623_ccounter;
+mod m20230614_120925_cquote_index;
 
 pub struct Migrator;
 
@@ -13,6 +14,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20220101_000001_create_table::Migration),
             Box::new(m20230329_110119_rolebuttons::Migration),
             Box::new(m20230607_114623_ccounter::Migration),
+            Box::new(m20230614_120925_cquote_index::Migration),
         ]
     }
 }

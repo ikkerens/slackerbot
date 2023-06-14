@@ -39,7 +39,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(Iden)]
-enum Quote {
+pub(super) enum Quote {
     Table,
     Id,
     ServerId,
