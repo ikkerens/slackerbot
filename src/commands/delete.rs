@@ -1,14 +1,10 @@
 use anyhow::{anyhow, Result};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serenity::{
+    all::{Command, CommandDataOptionValue, CommandInteraction, CommandOptionType},
+    builder::{CreateCommand, CreateCommandOption},
     client::Context,
-    model::{
-        application::{
-            command::{Command, CommandOptionType},
-            interaction::application_command::{ApplicationCommandInteraction, CommandDataOptionValue},
-        },
-        permissions::Permissions,
-    },
+    model::permissions::Permissions,
 };
 
 use entity::{prelude::Quote, quote};
@@ -16,26 +12,23 @@ use entity::{prelude::Quote, quote};
 use crate::{commands::send_ephemeral_message, util::DatabaseTypeMapKey};
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
-    Command::create_global_application_command(&ctx, |command| {
-        command
-            .name("delete")
+    Command::create_global_command(
+        ctx,
+        CreateCommand::new("delete")
             .description("Deletes a specific quote")
             .default_member_permissions(Permissions::MANAGE_MESSAGES)
             .dm_permission(false)
-            .create_option(|option| {
-                option
-                    .name("id")
-                    .description("A quote id (found in the bottom of the quote)")
-                    .kind(CommandOptionType::Integer)
-                    .min_int_value(0)
-                    .required(true)
-            })
-    })
+            .add_option(CreateCommandOption::new(
+                CommandOptionType::Integer,
+                "id",
+                "A quote id (found in the bottom of the quote)",
+            )),
+    )
     .await?;
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
     let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
 
     let permissions = match cmd.member.as_ref().and_then(|m| m.permissions) {
@@ -46,13 +39,13 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
         return send_ephemeral_message(ctx, cmd, "You do not have permission to use this command.").await;
     }
 
-    let id = match cmd.data.options.first().and_then(|id| id.resolved.clone()) {
-        Some(CommandDataOptionValue::Integer(id)) => id,
+    let id = match cmd.data.options.first().map(|id| &id.value) {
+        Some(CommandDataOptionValue::Integer(id)) => *id,
         _ => return send_ephemeral_message(ctx, cmd, "No quote id received, which is needed for deletion.").await,
     };
 
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
-    Quote::delete_by_id(id).filter(quote::Column::ServerId.eq(guild_id.0)).exec(&db).await?;
+    Quote::delete_by_id(id).filter(quote::Column::ServerId.eq(guild_id.0.get())).exec(&db).await?;
     send_ephemeral_message(ctx, cmd, &format!("Quote with id {} deleted!", id)).await
 }

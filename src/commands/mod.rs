@@ -1,11 +1,15 @@
 use anyhow::{anyhow, Result};
 use serenity::{
+    all::{CommandDataOption, CommandDataOptionValue, CommandInteraction},
+    builder::{CreateInteractionResponse, CreateInteractionResponseMessage},
     client::Context,
-    model::application::interaction::{
-        application_command::{ApplicationCommandInteraction, CommandDataOption},
-        InteractionResponseType,
-    },
 };
+
+pub(crate) use ccounter::handle_ingress as handle_ccounter_ingress;
+pub(crate) use rolebuttons::button::press_loop as rolebutton_press_loop;
+pub(crate) use rolebuttons::post::check_for_update as rolebutton_post_check_for_update;
+
+use crate::handler::Handler;
 
 mod ccounter;
 mod cquote;
@@ -18,11 +22,6 @@ mod rolebuttons;
 mod rquote;
 mod uquote;
 mod voicequote;
-
-use crate::handler::Handler;
-pub(crate) use ccounter::handle_ingress as handle_ccounter_ingress;
-pub(crate) use rolebuttons::button::press_loop as rolebutton_press_loop;
-pub(crate) use rolebuttons::post::check_for_update as rolebutton_post_check_for_update;
 
 pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     ccounter::register(ctx).await?;
@@ -39,14 +38,8 @@ pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
-    info!(
-        "Received command from {}#{}: /{} {}",
-        cmd.user.name,
-        cmd.user.discriminator,
-        cmd.data.name,
-        unwrap_options(&cmd.data.options, true)
-    );
+pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: CommandInteraction) -> Result<()> {
+    info!("Received command from {}: /{} {}", cmd.user.name, cmd.data.name, unwrap_options(&cmd.data.options, true));
 
     match cmd.data.name.as_str() {
         "cum" => ccounter::handle_command(ctx, cmd).await,
@@ -65,13 +58,12 @@ pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: Applica
     Ok(())
 }
 
-async fn send_ephemeral_message(ctx: Context, cmd: ApplicationCommandInteraction, error: &str) -> Result<()> {
+async fn send_ephemeral_message(ctx: Context, cmd: CommandInteraction, error: &str) -> Result<()> {
     Ok(cmd
-        .create_interaction_response(ctx, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| data.ephemeral(true).title("Error!").content(error))
-        })
+        .create_response(
+            ctx,
+            CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().ephemeral(true).content(error)),
+        )
         .await?)
 }
 
@@ -84,8 +76,14 @@ fn unwrap_options(options: &[CommandDataOption], first: bool) -> String {
         .iter()
         .map(|v| {
             let str = match &v.value {
-                Some(value) => value.to_string(),
-                None => format!("({})", unwrap_options(&v.options, false)),
+                CommandDataOptionValue::SubCommand(options) => format!("({})", unwrap_options(options, false)),
+                CommandDataOptionValue::String(str) => str.to_owned(),
+                CommandDataOptionValue::Role(role) => role.to_string(),
+                CommandDataOptionValue::Channel(channel) => channel.to_string(),
+                CommandDataOptionValue::User(user) => user.to_string(),
+                CommandDataOptionValue::Integer(int) => int.to_string(),
+                CommandDataOptionValue::Boolean(bool) => bool.to_string(),
+                _ => "<unsupported type>".to_string(),
             };
             format!("{}={}", v.name, str)
         })

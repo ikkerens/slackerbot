@@ -3,14 +3,10 @@ use std::sync::OnceLock;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serenity::{
+    all::{Command, CommandInteraction},
+    builder::{CreateCommand, CreateInteractionResponse, CreateInteractionResponseMessage},
     client::Context,
-    model::{
-        application::{
-            command::Command,
-            interaction::{application_command::ApplicationCommandInteraction, InteractionResponseType},
-        },
-        channel::Message,
-    },
+    model::channel::Message,
 };
 use tokio::sync::Mutex;
 
@@ -53,14 +49,12 @@ pub(crate) async fn handle_ingress(ctx: &Context, msg: &Message) -> Result<()> {
 }
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
-    Command::create_global_application_command(ctx, |command| {
-        command.name("cum").description("Blame Qais").dm_permission(false)
-    })
-    .await?;
+    Command::create_global_command(ctx, CreateCommand::new("cum").description("Blame Qais").dm_permission(false))
+        .await?;
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let count = match kvstore::get::<CCounter>(&db, "ccounter").await? {
         Some(counter) => counter.count,
@@ -68,11 +62,12 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
     };
     let plural = if count == 1 { "time" } else { "times" };
 
-    cmd.create_interaction_response(ctx, |response| {
-        response
-            .kind(InteractionResponseType::ChannelMessageWithSource)
-            .interaction_response_data(|data| data.content(format!("I have seen cum {count} {plural}.")))
-    })
+    cmd.create_response(
+        ctx,
+        CreateInteractionResponse::Message(
+            CreateInteractionResponseMessage::new().content(format!("I have seen cum {count} {plural}.")),
+        ),
+    )
     .await?;
     Ok(())
 }

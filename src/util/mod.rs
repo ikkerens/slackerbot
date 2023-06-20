@@ -1,13 +1,9 @@
-use std::borrow::Cow;
-
 use anyhow::{anyhow, Result};
 use sea_orm::DatabaseConnection;
 use serenity::{
+    builder::CreateAttachment,
     client::Context,
-    model::{
-        channel::{AttachmentType, Channel},
-        id::ChannelId,
-    },
+    model::{channel::Channel, id::ChannelId},
     prelude::TypeMapKey,
 };
 use tokio::select;
@@ -26,8 +22,8 @@ pub(crate) async fn download_file(url: &str) -> Result<Vec<u8>> {
     Ok(reqwest::get(url).await?.bytes().await?.into())
 }
 
-pub(crate) fn convert_bytes_to_attachment(name: impl ToString, bytes: Vec<u8>) -> AttachmentType<'static> {
-    AttachmentType::Bytes { filename: name.to_string(), data: Cow::Owned(bytes) }
+pub(crate) fn convert_bytes_to_attachment(name: impl ToString, bytes: Vec<u8>) -> CreateAttachment {
+    CreateAttachment::bytes(bytes, name.to_string())
 }
 
 #[cfg(windows)]

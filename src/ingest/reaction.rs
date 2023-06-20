@@ -27,7 +27,7 @@ pub(crate) async fn handle(ctx: Context, reaction: &Reaction) -> Result<()> {
     }
 
     // Check if the quote already exists in our database, and if so, just post it
-    let existing = Quote::find().filter(quote::Column::MessageId.eq(message.id.0)).one(&db).await?;
+    let existing = Quote::find().filter(quote::Column::MessageId.eq(message.id.0.get())).one(&db).await?;
     if let Some(quote) = existing {
         return post_quote(&ctx, quote, reaction.channel_id, None).await;
     }

@@ -2,9 +2,9 @@ use anyhow::Result;
 use chrono::FixedOffset;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set};
 use serenity::{
+    all::CommandInteraction,
     client::Context,
     model::{
-        application::interaction::application_command::ApplicationCommandInteraction,
         channel::Message,
         guild::Member,
         id::{ChannelId, GuildId, UserId},
@@ -28,7 +28,7 @@ async fn ingest(
     channel_id: ChannelId,
     content: String,
     message: Option<Message>,
-    response: Option<ApplicationCommandInteraction>,
+    response: Option<CommandInteraction>,
 ) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
@@ -48,15 +48,15 @@ async fn ingest(
 
     let inserted: quote::Model = quote::ActiveModel {
         id: Default::default(),
-        server_id: Set(member.guild_id.0 as i64),
-        channel_id: Set(channel_id.0 as i64),
+        server_id: Set(member.guild_id.0.get() as i64),
+        channel_id: Set(channel_id.0.get() as i64),
         channel_name: Set(channel_name(&ctx, channel_id).await?),
-        message_id: Set(message.as_ref().map(|msg| msg.id.0 as i64)),
+        message_id: Set(message.as_ref().map(|msg| msg.id.0.get() as i64)),
         timestamp: Set(message
             .map(|m| m.timestamp)
             .unwrap_or_else(Timestamp::now)
             .with_timezone(&FixedOffset::east_opt(0).unwrap())),
-        author_id: Set(member.user_id.0 as i64),
+        author_id: Set(member.user_id.0.get() as i64),
         author: Set(member.user_name),
         text: Set(content),
         author_image: avatar,
@@ -81,7 +81,7 @@ impl From<Member> for IngestMember {
         Self {
             guild_id: member.guild_id,
             user_id: member.user.id,
-            user_name: member.nick.as_ref().unwrap_or(&member.user.name).clone(),
+            user_name: member.display_name().to_string(),
             avatar_url: member.face(),
         }
     }

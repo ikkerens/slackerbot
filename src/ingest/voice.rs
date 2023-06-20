@@ -1,9 +1,7 @@
 use anyhow::Result;
 use serenity::{
+    all::{ChannelId, CommandInteraction, Member},
     client::Context,
-    model::{
-        application::interaction::application_command::ApplicationCommandInteraction, guild::Member, id::ChannelId,
-    },
 };
 
 use crate::ingest::ingest;
@@ -13,7 +11,7 @@ pub(crate) async fn handle(
     member: Member,
     channel: ChannelId,
     content: String,
-    cmd: ApplicationCommandInteraction,
+    cmd: CommandInteraction,
 ) -> Result<()> {
     ingest(ctx, member.into(), channel, content, None, Some(cmd)).await
 }

@@ -1,7 +1,6 @@
 use std::{collections::BTreeMap, sync::Arc};
 
-use actix_web::http::header::ContentType;
-use actix_web::{cookie::Cookie, get, web, web::Data, HttpRequest, HttpResponse, Responder};
+use actix_web::{cookie::Cookie, get, http::header::ContentType, web, web::Data, HttpRequest, HttpResponse, Responder};
 use anyhow::Result;
 use hmac::{digest::KeyInit, Hmac};
 use jwt::{SignWithKey, VerifyWithKey};
@@ -12,11 +11,11 @@ use oauth2::{
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serenity::{
+    http::Http,
     model::{
         id::{GuildId, UserId},
         user::User,
     },
-    CacheAndHttp,
 };
 use sha2::Sha256;
 
@@ -24,7 +23,7 @@ use sha2::Sha256;
 pub(crate) struct Client {
     oauth: BasicClient,
     key: Hmac<Sha256>,
-    discord: Arc<CacheAndHttp>,
+    discord: Arc<Http>,
     web_whitelist_guild_id: GuildId,
 }
 
@@ -34,7 +33,7 @@ impl Client {
         client_secret: String,
         redirect_url: String,
         cookie_secret: String,
-        discord: Arc<CacheAndHttp>,
+        discord: Arc<Http>,
         web_whitelist_guild_id: GuildId,
     ) -> Result<Self> {
         let oauth = BasicClient::new(

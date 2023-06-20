@@ -1,14 +1,10 @@
 use anyhow::{anyhow, Result};
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
 use serenity::{
+    all::{CommandDataOptionValue, CommandInteraction},
+    builder::{CreateInteractionResponse, CreateInteractionResponseMessage},
     client::Context,
-    model::{
-        application::interaction::{
-            application_command::{ApplicationCommandInteraction, CommandDataOptionValue},
-            InteractionResponseType,
-        },
-        id::GuildId,
-    },
+    model::id::GuildId,
     prelude::Mentionable,
 };
 
@@ -19,14 +15,18 @@ use crate::{
     util::DatabaseTypeMapKey,
 };
 
-pub(super) async fn handle(ctx: Context, cmd: ApplicationCommandInteraction, guild_id: GuildId) -> Result<()> {
+pub(super) async fn handle(ctx: Context, cmd: CommandInteraction, guild_id: GuildId) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let mut server =
-        match RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.0)).one(&db).await? {
-            Some(server) => server.into_active_model(),
-            None => return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await,
-        };
-    let Some(CommandDataOptionValue::Role(role)) = cmd.data.options.get(0).and_then(|o| o.options.get(0)).and_then(|r| r.resolved.as_ref()) else { return send_ephemeral_message(ctx, cmd, "Could not parse role.").await };
+    let mut server = match RoleButtonServer::find()
+        .filter(role_button_server::Column::ServerId.eq(guild_id.0.get()))
+        .one(&db)
+        .await?
+    {
+        Some(server) => server.into_active_model(),
+        None => return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await,
+    };
+    let Some(CommandDataOptionValue::SubCommand(args)) = cmd.data.options.get(0).map(|o| &o.value) else { return Err(anyhow!("Could not fetch arguments for remove")) };
+    let Some(CommandDataOptionValue::Role(role)) = args.get(0).map(|r| &r.value) else { return send_ephemeral_message(ctx, cmd, "Could not parse role.").await };
 
     let mut roles = match server.roles.take() {
         Some(roles) => roles,
@@ -37,7 +37,7 @@ pub(super) async fn handle(ctx: Context, cmd: ApplicationCommandInteraction, gui
         None => return Err(anyhow!("Guild with roles but no emojis")),
     };
 
-    let index = roles.iter().position(|x| *x == role.id.0 as i64);
+    let index = roles.iter().position(|x| *x == role.0.get() as i64);
     match index {
         Some(index) => {
             roles.remove(index);
@@ -50,13 +50,14 @@ pub(super) async fn handle(ctx: Context, cmd: ApplicationCommandInteraction, gui
     let model = server.update(&db).await?;
     tokio::spawn(post::check_for_update(ctx.clone(), model));
 
-    cmd.create_interaction_response(ctx, |response| {
-        response.kind(InteractionResponseType::ChannelMessageWithSource).interaction_response_data(|data| {
-            data.ephemeral(true)
-                .title("Done!")
-                .content(format!("I've removed {} from the rolebuttons.", role.mention()))
-        })
-    })
+    cmd.create_response(
+        ctx,
+        CreateInteractionResponse::Message(
+            CreateInteractionResponseMessage::new()
+                .ephemeral(true)
+                .content(format!("I've removed {} from the rolebuttons.", role.mention())),
+        ),
+    )
     .await?;
 
     Ok(())

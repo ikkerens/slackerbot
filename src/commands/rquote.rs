@@ -4,8 +4,9 @@ use anyhow::{anyhow, Result};
 use rand::{seq::IteratorRandom, thread_rng};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serenity::{
+    all::{Command, CommandInteraction},
+    builder::CreateCommand,
     client::Context,
-    model::application::{command::Command, interaction::application_command::ApplicationCommandInteraction},
 };
 use tokio::sync::Mutex;
 
@@ -16,14 +17,15 @@ use crate::{commands::send_ephemeral_message, quote::post_quote, util::DatabaseT
 static RANDOM_BLACKLIST: OnceLock<Mutex<VecDeque<i64>>> = OnceLock::new();
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
-    Command::create_global_application_command(ctx, |command| {
-        command.name("rquote").description("Posts a random quote").dm_permission(false)
-    })
+    Command::create_global_command(
+        ctx,
+        CreateCommand::new("rquote").description("Posts a random quote").dm_permission(false),
+    )
     .await?;
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let Some(guild_id) = cmd.guild_id else { return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await };
 
@@ -31,7 +33,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteract
     let ids: Vec<i64> = Quote::find()
         .select_only()
         .column(quote::Column::Id)
-        .filter(quote::Column::ServerId.eq(guild_id.0))
+        .filter(quote::Column::ServerId.eq(guild_id.0.get()))
         .into_tuple()
         .all(&db)
         .await?;

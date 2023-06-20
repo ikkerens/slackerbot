@@ -1,12 +1,10 @@
 use anyhow::{anyhow, Result};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use serenity::{
+    all::{ComponentInteraction, Mentionable},
+    builder::{CreateInteractionResponse, CreateInteractionResponseMessage},
     client::Context,
-    model::{
-        application::interaction::{message_component::MessageComponentInteraction, InteractionResponseType},
-        id::RoleId,
-    },
-    prelude::Mentionable,
+    model::id::RoleId,
 };
 use tokio::sync::broadcast::{self, error::RecvError};
 
@@ -14,7 +12,7 @@ use entity::{prelude::RoleButtonServer, role_button_server};
 
 use crate::util::DatabaseTypeMapKey;
 
-pub(crate) async fn press_loop(mut recv: broadcast::Receiver<(Context, MessageComponentInteraction)>) {
+pub(crate) async fn press_loop(mut recv: broadcast::Receiver<(Context, ComponentInteraction)>) {
     loop {
         let (ctx, interaction) = match recv.recv().await {
             Ok(interaction) => interaction,
@@ -38,7 +36,7 @@ pub(crate) async fn press_loop(mut recv: broadcast::Receiver<(Context, MessageCo
     }
 }
 
-async fn pressed(ctx: Context, mut interaction: MessageComponentInteraction) -> Result<()> {
+async fn pressed(ctx: Context, mut interaction: ComponentInteraction) -> Result<()> {
     let member = match &mut interaction.member {
         Some(member) => member,
         None => return Err(anyhow!("Interaction that did not come from a server.")),
@@ -46,11 +44,11 @@ async fn pressed(ctx: Context, mut interaction: MessageComponentInteraction) -> 
 
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let Some(server) =
-        RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(member.guild_id.0)).one(&db).await? else { return Err(anyhow!("Button pressed for an unregistered server.")) };
+        RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(member.guild_id.0.get() as i64)).one(&db).await? else { return Err(anyhow!("Button pressed for an unregistered server.")) };
 
     let role_id =
         interaction.data.custom_id.strip_prefix("role_").unwrap_or(&interaction.data.custom_id).parse::<RoleId>()?;
-    if !server.roles.contains(&(role_id.0 as i64)) {
+    if !server.roles.contains(&(role_id.0.get() as i64)) {
         return Err(anyhow!("Role was requested that is not in the rolebuttons."));
     }
 
@@ -63,11 +61,10 @@ async fn pressed(ctx: Context, mut interaction: MessageComponentInteraction) -> 
     };
 
     interaction
-        .create_interaction_response(ctx, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| data.ephemeral(true).title("Done!").content(msg))
-        })
+        .create_response(
+            ctx,
+            CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().ephemeral(true).content(msg)),
+        )
         .await?;
 
     Ok(())

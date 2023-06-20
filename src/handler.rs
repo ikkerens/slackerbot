@@ -1,12 +1,10 @@
 use serenity::{
+    all::{ComponentInteraction, Interaction},
     client::{Context, EventHandler},
+    gateway::ActivityData,
     model::{
-        application::interaction::{
-            message_component::MessageComponentInteraction,
-            Interaction::{self, ApplicationCommand, MessageComponent},
-        },
         channel::{Message, Reaction, ReactionType},
-        gateway::{Activity, Ready},
+        gateway::Ready,
         guild::Role,
         id::{GuildId, RoleId},
     },
@@ -22,7 +20,7 @@ use crate::{
 const QUOTE_REACTION: &str = "💬";
 
 pub(crate) struct Handler {
-    component_interactions: broadcast::Sender<(Context, MessageComponentInteraction)>,
+    component_interactions: broadcast::Sender<(Context, ComponentInteraction)>,
 }
 
 impl Handler {
@@ -32,7 +30,7 @@ impl Handler {
         Self { component_interactions: sender }
     }
 
-    pub fn subscribe_to_component_interactions(&self) -> broadcast::Receiver<(Context, MessageComponentInteraction)> {
+    pub fn subscribe_to_component_interactions(&self) -> broadcast::Receiver<(Context, ComponentInteraction)> {
         self.component_interactions.subscribe()
     }
 }
@@ -74,17 +72,17 @@ impl EventHandler for Handler {
             error!("Could not register global commands: {}", e);
         }
 
-        ctx.shard.set_activity(Some(Activity::playing("in therapy")))
+        ctx.shard.set_activity(Some(ActivityData::playing("in therapy")));
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         match interaction {
-            ApplicationCommand(cmd) => {
+            Interaction::Command(cmd) => {
                 if let Err(e) = handle_command(self, ctx, cmd).await {
                     error!("Could not handle command: {}", e);
                 }
             }
-            MessageComponent(int) => {
+            Interaction::Component(int) => {
                 if let Err(e) = self.component_interactions.send((ctx, int)) {
                     error!("Could not handle component interaction: {e}");
                 }

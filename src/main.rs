@@ -1,15 +1,11 @@
 #[macro_use]
 extern crate tracing;
 
-use std::{env, sync::Arc};
+use std::{env, num::NonZeroU64, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use sea_orm::Database;
-use serenity::{
-    client::{bridge::gateway::ShardManager, ClientBuilder},
-    model::id::GuildId,
-    prelude::GatewayIntents,
-};
+use serenity::{client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
 use tokio::sync::Mutex;
 use tracing_subscriber::filter::EnvFilter;
 
@@ -53,7 +49,10 @@ async fn main() -> Result<()> {
                 | GatewayIntents::GUILD_MEMBERS,
         )
         .event_handler(Handler::new())
-        .cache_settings(|c| c.max_messages(100))
+        .cache_settings(|c| {
+            c.max_messages = 100;
+            c
+        })
         .await?
     };
 
@@ -65,7 +64,7 @@ async fn main() -> Result<()> {
         let web_whitelist_guild_id = GuildId(
             env::var("WEB_WHITELIST_GUILD_ID")
                 .map_err(|_| anyhow!("No WEB_WHITELIST_GUILD_ID"))?
-                .parse::<u64>()
+                .parse::<NonZeroU64>()
                 .map_err(|e| anyhow!("Could not parse guild id: {}", e))?,
         );
         let auth_client = Client::new(
@@ -73,7 +72,7 @@ async fn main() -> Result<()> {
             client_secret,
             redirect_uri,
             jwt_secret,
-            discord_client.cache_and_http.clone(),
+            discord_client.http.clone(),
             web_whitelist_guild_id,
         )?;
         web::start(database.clone(), auth_client)?;

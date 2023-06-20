@@ -1,13 +1,9 @@
 use anyhow::Result;
 use serenity::{
+    all::{Command, CommandInteraction, CommandOptionType},
+    builder::{CreateCommand, CreateCommandOption},
     client::Context,
-    model::{
-        application::{
-            command::{Command, CommandOptionType},
-            interaction::application_command::ApplicationCommandInteraction,
-        },
-        Permissions,
-    },
+    model::Permissions,
 };
 
 use crate::commands::send_ephemeral_message;
@@ -18,57 +14,49 @@ pub(crate) mod post;
 mod remove;
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
-    Command::create_global_application_command(ctx, |command| {
-        command
-            .name("rolebuttons")
+    Command::create_global_command(
+        ctx,
+        CreateCommand::new("rolebuttons")
             .description("All role actions")
             .dm_permission(false)
             .default_member_permissions(Permissions::MANAGE_ROLES)
-            .create_option(|option| {
-                option
-                    .name("add")
-                    .description("Adds a role to the rolebuttons")
-                    .kind(CommandOptionType::SubCommand)
-                    .create_sub_option(|option| {
-                        option
-                            .name("role")
-                            .description("The role to add to the rolebuttons")
-                            .kind(CommandOptionType::Role)
-                            .required(true)
-                    })
-                    .create_sub_option(|option| {
-                        option
-                            .name("emoji")
-                            .description("The emoji to use as the icon")
-                            .kind(CommandOptionType::String)
-                            .required(true)
-                    })
-            })
-            .create_option(|option| {
-                option
-                    .name("remove")
-                    .description("Removes a role from the rolebuttons")
-                    .kind(CommandOptionType::SubCommand)
-                    .create_sub_option(|option| {
-                        option
-                            .name("role")
-                            .description("The role to remove from the rolebuttons")
-                            .kind(CommandOptionType::Role)
-                            .required(true)
-                    })
-            })
-            .create_option(|option| {
-                option
-                    .name("post")
-                    .description("Re-creates the post with the role selection buttons in the current channel")
-                    .kind(CommandOptionType::SubCommand)
-            })
-    })
+            .add_option(
+                CreateCommandOption::new(CommandOptionType::SubCommand, "add", "Adds a role to the rolebutton")
+                    .add_sub_option(
+                        CreateCommandOption::new(CommandOptionType::Role, "role", "The role to add to the rolebuttons")
+                            .required(true),
+                    )
+                    .add_sub_option(
+                        CreateCommandOption::new(CommandOptionType::String, "emoji", "The emoji to use as the icon")
+                            .required(true),
+                    ),
+            )
+            .add_option(
+                CreateCommandOption::new(
+                    CommandOptionType::SubCommand,
+                    "remove",
+                    "Removes a role from the rolebuttons",
+                )
+                .add_sub_option(
+                    CreateCommandOption::new(
+                        CommandOptionType::Role,
+                        "role",
+                        "The role to remove from the rolebuttons",
+                    )
+                    .required(true),
+                ),
+            )
+            .add_option(CreateCommandOption::new(
+                CommandOptionType::SubCommand,
+                "post",
+                "Re-creates the post with the role selection buttons in the current channel",
+            )),
+    )
     .await?;
     Ok(())
 }
 
-pub(super) async fn handle_command(ctx: Context, cmd: ApplicationCommandInteraction) -> Result<()> {
+pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
     let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
     let Some(subcmd) = cmd.data.options.first().map(|o| o.name.as_str()) else {return send_ephemeral_message(ctx, cmd, "No subcommand passed").await};
     let channel_id = cmd.channel_id;
