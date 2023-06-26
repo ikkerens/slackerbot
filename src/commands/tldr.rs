@@ -19,15 +19,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
         ctx,
         CreateCommand::new("tldr")
             .description("Posts a tl;dr of the last specified amount of time")
-            .dm_permission(false)
-            .add_option(
-                CreateCommandOption::new(
-                    CommandOptionType::Integer,
-                    "hours",
-                    "How many hours to look back into the channels history. Defaults to 2.",
-                )
-                .required(false),
-            ),
+            .dm_permission(false),
     )
     .await?;
     Ok(())
@@ -35,11 +27,6 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 
 pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
     let gpt = ctx.data.read().await.get::<ChatGPTTypeMapKey>().unwrap().clone();
-
-    let duration = Duration::hours(match cmd.data.options.first().map(|id| &id.value) {
-        Some(CommandDataOptionValue::Integer(hours)) => *hours,
-        _ => 2,
-    });
 
     // Tell the user the bot is thinking, as ChatGPT API is not super fast.
     cmd.create_response(&ctx, CreateInteractionResponse::Defer(CreateInteractionResponseMessage::new())).await?;
@@ -55,7 +42,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     let mut messages = Vec::new(); // A place to store all the history to send to ChatGPT
     let mut oldest = MessageId::from(cmd.id.0); // Grab the interaction ID, so we have a very new ID to compare against
-    let earliest = Utc::now() - duration; // We don't want messages older than this
+    let earliest = Utc::now() - Duration::hours(2); // We don't want messages older than this
 
     // First try cache
     for message in
