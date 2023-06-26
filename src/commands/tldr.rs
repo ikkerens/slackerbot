@@ -88,6 +88,15 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         }
     }
 
+    if messages.len() < 50 {
+        return send_ephemeral_message(
+            ctx,
+            cmd,
+            "Look. We're talking about at most 50 messages. Surely you can just scroll up.",
+        )
+        .await;
+    }
+
     // Then decide how much context we want
     let context = min(5 + (messages.len() / 100), 10);
 
