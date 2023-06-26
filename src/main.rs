@@ -4,6 +4,8 @@ extern crate tracing;
 use std::{env, num::NonZeroU64, sync::Arc};
 
 use anyhow::{anyhow, Result};
+use chatgpt::client::ChatGPT;
+use chatgpt::config::{ChatGPTEngine, ModelConfigurationBuilder};
 use sea_orm::Database;
 use serenity::{client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
 use tokio::sync::Mutex;
@@ -11,6 +13,7 @@ use tracing_subscriber::filter::EnvFilter;
 
 use migration::{Migrator, MigratorTrait};
 
+use crate::util::ChatGPTTypeMapKey;
 use crate::{
     handler::Handler,
     util::{wait_for_signal, DatabaseTypeMapKey},
@@ -50,11 +53,16 @@ async fn main() -> Result<()> {
         )
         .event_handler(Handler::new())
         .cache_settings(|c| {
-            c.max_messages = 100;
+            c.max_messages = 1000;
             c
         })
         .await?
     };
+
+    let chatgpt = ChatGPT::new_with_config(
+        env::var("CHATGPT_TOKEN").map_err(|_| anyhow!("No CHATGPT_TOKEN env var"))?,
+        ModelConfigurationBuilder::default().engine(ChatGPTEngine::Gpt35Turbo).build()?,
+    )?;
 
     {
         let client_id = env::var("OAUTH_CLIENT").map_err(|_| anyhow!("No OAUTH_CLIENT env var"))?;
@@ -81,6 +89,7 @@ async fn main() -> Result<()> {
     {
         let mut data = discord_client.data.write().await;
         data.insert::<DatabaseTypeMapKey>(database);
+        data.insert::<ChatGPTTypeMapKey>(Arc::new(chatgpt));
     }
 
     info!("Setup complete. Starting bot...");

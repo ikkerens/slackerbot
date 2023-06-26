@@ -20,6 +20,7 @@ mod quote;
 mod readycheck;
 mod rolebuttons;
 mod rquote;
+mod tldr;
 mod uquote;
 mod voicequote;
 
@@ -33,6 +34,7 @@ pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     readycheck::register(ctx).await?;
     rolebuttons::register(ctx).await?;
     rquote::register(ctx).await?;
+    tldr::register(ctx).await?;
     uquote::register(ctx).await?;
     voicequote::register(ctx).await?;
     Ok(())
@@ -51,6 +53,7 @@ pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: Command
         "readycheck" => readycheck::handle_command(handler, ctx, cmd).await,
         "rolebuttons" => rolebuttons::handle_command(ctx, cmd).await,
         "rquote" => rquote::handle_command(ctx, cmd).await,
+        "tldr" => tldr::handle_command(ctx, cmd).await,
         "uquote" => uquote::handle_command(ctx, cmd).await,
         "voicequote" => voicequote::handle_command(ctx, cmd).await,
         _ => return Err(anyhow!("Unknown command received: {}", cmd.data.name)),

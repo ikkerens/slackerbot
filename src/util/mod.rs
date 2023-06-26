@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use anyhow::{anyhow, Result};
+use chatgpt::client::ChatGPT;
 use sea_orm::DatabaseConnection;
 use serenity::{
     builder::CreateAttachment,
@@ -58,4 +61,10 @@ pub(crate) struct DatabaseTypeMapKey;
 
 impl TypeMapKey for DatabaseTypeMapKey {
     type Value = DatabaseConnection;
+}
+
+pub(crate) struct ChatGPTTypeMapKey;
+
+impl TypeMapKey for ChatGPTTypeMapKey {
+    type Value = Arc<ChatGPT>;
 }

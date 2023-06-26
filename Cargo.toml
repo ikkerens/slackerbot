@@ -39,6 +39,7 @@ sha2 = "0.10"
 # Util
 duration-str = "0.5"
 rand = "0.8"
+chatgpt_rs = "1.1.10"
 
 [profile.release]
 lto = true
