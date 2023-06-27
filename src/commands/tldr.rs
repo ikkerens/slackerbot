@@ -1,3 +1,5 @@
+use std::cmp::min;
+
 use anyhow::Result;
 use chatgpt::types::{ChatMessage, Role};
 use chrono::{Duration, Utc};
@@ -7,11 +9,11 @@ use serenity::{
     client::Context,
     futures::StreamExt,
 };
-use std::cmp::min;
-
-const TLDR_MESSAGE_HISTORY: usize = 300;
+use tiktoken_rs::cl100k_base;
 
 use crate::{commands::send_ephemeral_message, util::ChatGPTTypeMapKey};
+
+const TLDR_MESSAGE_HISTORY: usize = 300;
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_command(
@@ -115,9 +117,23 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     // Sort it by timestamp, so it all makes sense
     messages.sort_by_key(|m| m.timestamp);
-    for message in messages.into_iter() {
-        conversation.history.push(message_to_gpt_message(&ctx, message).await?);
+
+    // Check the token length, so we don't exceed ChatGPTs cap
+    let tokenizer = cl100k_base()?;
+    let mut history = "".to_string();
+    for message in messages.into_iter().rev() {
+        // Convert it into a GPT message
+        let gpt_message = message_to_gpt_message(&ctx, message).await?;
+        history += &gpt_message.content;
+
+        // Count the tokens, if we exceed 4000 we stop accepting more messages
+        if tokenizer.encode_with_special_tokens(&history).len() > 4000 {
+            break;
+        }
+
+        conversation.history.push(gpt_message);
     }
+    conversation.history.reverse();
 
     // Send it all off, prompting ChatGPT to write a summary.
     let response = conversation

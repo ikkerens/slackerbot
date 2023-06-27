@@ -36,10 +36,13 @@ jwt = "0.16"
 hmac = "0.12"
 sha2 = "0.10"
 
+# TLDR command
+chatgpt_rs = "1.1"
+tiktoken-rs = { version = "0.4", features = [ "async-openai" ] }
+
 # Util
 duration-str = "0.5"
 rand = "0.8"
-chatgpt_rs = "1.1.10"
 
 [profile.release]
 lto = true
