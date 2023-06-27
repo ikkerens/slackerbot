@@ -2,15 +2,14 @@ use anyhow::Result;
 use chatgpt::types::{ChatMessage, Role};
 use chrono::{Duration, Utc};
 use serenity::{
-    all::{
-        Command, CommandDataOptionValue, CommandInteraction, CommandOptionType, CreateInteractionResponseMessage,
-        Message, MessageId,
-    },
-    builder::{CreateCommand, CreateCommandOption, CreateInteractionResponse, EditInteractionResponse},
+    all::{Command, CommandInteraction, CreateInteractionResponseMessage, Member, Message, MessageId, User},
+    builder::{CreateCommand, CreateInteractionResponse, EditInteractionResponse},
     client::Context,
     futures::StreamExt,
 };
 use std::cmp::min;
+
+const TLDR_MESSAGE_HISTORY: usize = 300;
 
 use crate::{commands::send_ephemeral_message, util::ChatGPTTypeMapKey};
 
@@ -42,25 +41,37 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     let mut messages = Vec::new(); // A place to store all the history to send to ChatGPT
     let mut oldest = MessageId::from(cmd.id.0); // Grab the interaction ID, so we have a very new ID to compare against
-    let earliest = Utc::now() - Duration::hours(2); // We don't want messages older than this
+    let earliest = Utc::now() - Duration::hours(8); // We don't want messages older than this
 
     // First try cache
-    for message in
-        ctx.cache.channel_messages(cmd.channel_id).as_ref().map(|c| c.values().collect::<Vec<_>>()).unwrap_or_default()
     {
-        if oldest.created_at() > message.timestamp {
-            oldest = message.id;
-        }
+        let cache_ref = ctx.cache.channel_messages(cmd.channel_id);
+        let cache_messages = cache_ref.as_ref().map(|c| c.values().collect::<Vec<_>>()).unwrap_or_default();
 
-        if message.timestamp < earliest.into() {
-            continue;
-        }
+        for message in cache_messages.into_iter().rev().take(TLDR_MESSAGE_HISTORY) {
+            if oldest.created_at() > message.timestamp {
+                oldest = message.id;
+            }
 
-        messages.push(message.clone());
+            if message.timestamp < earliest.into() {
+                continue;
+            }
+
+            // Ignore messages from the bot
+            if message.author.bot {
+                continue;
+            }
+            // Ignore messages we can't process
+            if message.content.is_empty() {
+                continue;
+            }
+
+            messages.push(message.clone());
+        }
     }
 
     // Then, if we haven't found the oldest yet, ask Discord
-    if oldest.created_at() > earliest.into() {
+    if oldest.created_at() > earliest.into() && messages.len() < TLDR_MESSAGE_HISTORY {
         let mut msg_iter = cmd.channel_id.messages_iter(&ctx).boxed();
         while let Some(message) = msg_iter.next().await {
             let message = message?;
@@ -69,19 +80,34 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
                 break;
             }
 
+            // Ignore messages from the bot
+            if message.author.bot {
+                continue;
+            }
+            // Ignore messages we can't process
+            if message.content.is_empty() {
+                continue;
+            }
+
             if !messages.iter().any(|m| m.id == message.id) {
                 messages.push(message);
+            }
+
+            if messages.len() == 300 {
+                break;
             }
         }
     }
 
     if messages.len() < 50 {
-        return send_ephemeral_message(
+        cmd.edit_response(
             ctx,
-            cmd,
-            "Look. We're talking about at most 50 messages. Surely you can just scroll up.",
+            EditInteractionResponse::new().content(
+                "Look, We're talking about at most 50 messages in the last 8 hours, surely you can just scroll up.",
+            ),
         )
-        .await;
+        .await?;
+        return Ok(());
     }
 
     // Then decide how much context we want
@@ -90,15 +116,6 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     // Sort it by timestamp, so it all makes sense
     messages.sort_by_key(|m| m.timestamp);
     for message in messages.into_iter() {
-        // Ignore messages from the bot
-        if message.author.bot {
-            continue;
-        }
-        // Ignore messages we can't process
-        if message.content.is_empty() {
-            continue;
-        }
-
         conversation.history.push(message_to_gpt_message(&ctx, message).await?);
     }
 
@@ -113,17 +130,25 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 }
 
 async fn message_to_gpt_message(ctx: &Context, msg: Message) -> Result<ChatMessage> {
-    let member = msg.member(&ctx).await.ok();
+    let context = if let Some(reference) = msg.referenced_message.as_ref() {
+        format!(", in reply to {}", resolve_name(&reference.author, reference.member(ctx).await.ok().as_ref()))
+    } else {
+        "".to_string()
+    };
 
     Ok(ChatMessage {
         role: Role::System,
         content: format!(
-            "{author} says: \"{message}\"",
-            author = member.as_ref().map_or_else(
-                || msg.author.global_name.as_ref().map_or_else(|| msg.author.name.as_str(), |nick| nick.as_str()),
-                |m| m.display_name()
-            ),
+            "{author} says{context}: \"{message}\"",
+            author = resolve_name(&msg.author, msg.member(&ctx).await.ok().as_ref()),
             message = msg.content_safe(ctx)
         ),
     })
+}
+
+fn resolve_name<'a>(user: &'a User, member: Option<&'a Member>) -> &'a str {
+    member.map_or_else(
+        || user.global_name.as_deref().map_or_else(|| user.name.as_str(), |nick| nick),
+        |m| m.display_name(),
+    )
 }
