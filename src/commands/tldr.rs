@@ -114,12 +114,22 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     // Then decide how much context we want
     let context = min(5 + (messages.len() / 100), 10);
+    let prompt = format!(
+        "Please summarize the discussed subjects in at most {context} bullet points, use usernames where reasonable."
+    );
 
     // Sort it by timestamp, so it all makes sense
     messages.sort_by_key(|m| m.timestamp);
 
-    // Check the token length, so we don't exceed ChatGPTs cap
+    // Prepare a list of token checks
     let mut history = Vec::with_capacity(messages.len());
+    history.push(ChatCompletionRequestMessage {
+        role: "system".to_string(),
+        content: conversation.history.first().unwrap().content.to_owned(),
+        name: None,
+    });
+    history.push(ChatCompletionRequestMessage { role: "system".to_string(), content: prompt.clone(), name: None });
+
     for message in messages.into_iter().rev() {
         // Convert it into a GPT message
         let gpt_message = message_to_gpt_message(&ctx, message).await?;
@@ -130,7 +140,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         });
 
         // Count the tokens, if we exceed 4000 we stop accepting more messages
-        if get_chat_completion_max_tokens("gpt-3.5-turbo", &history)? > 4000 {
+        if get_chat_completion_max_tokens("gpt-3.5-turbo", &history)? <= 10 {
             break;
         }
 
@@ -139,9 +149,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     conversation.history.reverse();
 
     // Send it all off, prompting ChatGPT to write a summary.
-    let response = conversation
-        .send_message(format!("Please summarize the discussed subjects in at most {context} bullet points, use usernames where reasonable."))
-        .await?;
+    let response = conversation.send_message(prompt).await?;
 
     // Edit in the response from the bot
     cmd.edit_response(ctx, EditInteractionResponse::new().content(response.message().content.clone())).await?;
