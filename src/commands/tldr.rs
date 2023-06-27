@@ -125,6 +125,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         // Convert it into a GPT message
         let gpt_message = message_to_gpt_message(&ctx, message).await?;
         history += &gpt_message.content;
+        history += "\n";
 
         // Count the tokens, if we exceed 4000 we stop accepting more messages
         if tokenizer.encode_with_special_tokens(&history).len() > 4000 {
@@ -137,7 +138,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     // Send it all off, prompting ChatGPT to write a summary.
     let response = conversation
-        .send_message(format!("Please summarize the discussed subjects in at most {context} bullet points."))
+        .send_message(format!("Please summarize the discussed subjects in at most {context} bullet points, use usernames where reasonable."))
         .await?;
 
     // Edit in the response from the bot
