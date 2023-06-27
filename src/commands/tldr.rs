@@ -9,7 +9,7 @@ use serenity::{
     client::Context,
     futures::StreamExt,
 };
-use tiktoken_rs::{get_chat_completion_max_tokens, ChatCompletionRequestMessage};
+use tiktoken_rs::{cl100k_base, CoreBPE};
 
 use crate::{commands::send_ephemeral_message, util::ChatGPTTypeMapKey};
 
@@ -122,28 +122,23 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     messages.sort_by_key(|m| m.timestamp);
 
     // Prepare a list of token checks
+    let bpe = cl100k_base()?;
     let mut history = Vec::with_capacity(messages.len());
-    history.push(ChatCompletionRequestMessage {
-        role: "system".to_string(),
-        content: conversation.history.first().unwrap().content.to_owned(),
-        name: None,
-    });
-    history.push(ChatCompletionRequestMessage { role: "system".to_string(), content: prompt.clone(), name: None });
+    history.push(conversation.history.first().unwrap().clone());
+    history.push(ChatMessage { role: Role::System, content: prompt.clone() });
+    let mut remaining = 4096 - num_tokens_from_messages(&bpe, &history)?;
 
     for message in messages.into_iter().rev() {
         // Convert it into a GPT message
         let gpt_message = message_to_gpt_message(&ctx, message).await?;
-        history.push(ChatCompletionRequestMessage {
-            role: "system".to_string(),
-            content: gpt_message.content.to_owned(),
-            name: None,
-        });
+        let cost = num_tokens_from_messages(&bpe, &[gpt_message.clone()])?;
 
-        // Count the tokens, if we exceed 4000 we stop accepting more messages
-        if get_chat_completion_max_tokens("gpt-3.5-turbo", &history)? <= 10 {
+        // Count the tokens, if we exceed 4096 total we stop accepting more messages
+        if cost >= remaining {
             break;
         }
 
+        remaining -= cost;
         conversation.history.push(gpt_message);
     }
     conversation.history.reverse();
@@ -178,4 +173,15 @@ fn resolve_name<'a>(user: &'a User, member: Option<&'a Member>) -> &'a str {
         || user.global_name.as_deref().map_or_else(|| user.name.as_str(), |nick| nick),
         |m| m.display_name(),
     )
+}
+
+fn num_tokens_from_messages(bpe: &CoreBPE, messages: &[ChatMessage]) -> Result<usize> {
+    let mut num_tokens: i32 = 0;
+    for message in messages {
+        num_tokens += 4; // every message follows <im_start>{role/name}\n{content}<im_end>\n;
+        num_tokens += bpe.encode_with_special_tokens("system").len() as i32;
+        num_tokens += bpe.encode_with_special_tokens(&message.content).len() as i32;
+    }
+    num_tokens += 3; // every reply is primed with <|start|>assistant<|message|>
+    Ok(num_tokens as usize)
 }
