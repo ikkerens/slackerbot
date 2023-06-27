@@ -9,7 +9,7 @@ use serenity::{
     client::Context,
     futures::StreamExt,
 };
-use tiktoken_rs::cl100k_base;
+use tiktoken_rs::{get_chat_completion_max_tokens, ChatCompletionRequestMessage};
 
 use crate::{commands::send_ephemeral_message, util::ChatGPTTypeMapKey};
 
@@ -119,16 +119,18 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     messages.sort_by_key(|m| m.timestamp);
 
     // Check the token length, so we don't exceed ChatGPTs cap
-    let tokenizer = cl100k_base()?;
-    let mut history = "".to_string();
+    let mut history = Vec::with_capacity(messages.len());
     for message in messages.into_iter().rev() {
         // Convert it into a GPT message
         let gpt_message = message_to_gpt_message(&ctx, message).await?;
-        history += &gpt_message.content;
-        history += "\n";
+        history.push(ChatCompletionRequestMessage {
+            role: "system".to_string(),
+            content: gpt_message.content.to_owned(),
+            name: None,
+        });
 
         // Count the tokens, if we exceed 4000 we stop accepting more messages
-        if tokenizer.encode_with_special_tokens(&history).len() > 4000 {
+        if get_chat_completion_max_tokens("gpt-3.5-turbo", &history)? > 4000 {
             break;
         }
 
