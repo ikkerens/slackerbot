@@ -8,6 +8,7 @@ use chatgpt::client::ChatGPT;
 use chatgpt::config::{ChatGPTEngine, ModelConfigurationBuilder};
 use sea_orm::Database;
 use serenity::{client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
+use tiktoken_rs::cl100k_base;
 use tokio::sync::Mutex;
 use tracing_subscriber::filter::EnvFilter;
 
@@ -53,7 +54,7 @@ async fn main() -> Result<()> {
         )
         .event_handler(Handler::new())
         .cache_settings(|c| {
-            c.max_messages = 1000;
+            c.max_messages = 300;
             c
         })
         .await?
@@ -89,7 +90,7 @@ async fn main() -> Result<()> {
     {
         let mut data = discord_client.data.write().await;
         data.insert::<DatabaseTypeMapKey>(database);
-        data.insert::<ChatGPTTypeMapKey>(Arc::new(chatgpt));
+        data.insert::<ChatGPTTypeMapKey>((Arc::new(chatgpt), Arc::new(cl100k_base()?)));
     }
 
     info!("Setup complete. Starting bot...");

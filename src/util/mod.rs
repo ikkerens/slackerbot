@@ -9,6 +9,7 @@ use serenity::{
     model::{channel::Channel, id::ChannelId},
     prelude::TypeMapKey,
 };
+use tiktoken_rs::CoreBPE;
 use tokio::select;
 
 pub mod kvstore;
@@ -66,5 +67,5 @@ impl TypeMapKey for DatabaseTypeMapKey {
 pub(crate) struct ChatGPTTypeMapKey;
 
 impl TypeMapKey for ChatGPTTypeMapKey {
-    type Value = Arc<ChatGPT>;
+    type Value = (Arc<ChatGPT>, Arc<CoreBPE>);
 }
