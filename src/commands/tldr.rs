@@ -81,7 +81,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     // Then decide how much context we want
     let context = min(5 + (messages.len() / 100), 10);
     let prompt = format!(
-        "Please summarize the discussed subjects in at most {context} bullet points, use usernames where reasonable, and be incredibly sarcastic in all your points."
+        "Please summarize the discussed subjects in at most {context} bullet points, use usernames where reasonable."
     );
 
     // Sort it by timestamp, so it all makes sense
@@ -116,8 +116,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     let response = conversation.send_message(prompt).await?;
 
     // Edit in the response from the bot
-    let content = response.message().content.clone();
-    cmd.edit_response(&ctx, EditInteractionResponse::new().content(content)).await?;
+    cmd.edit_response(&ctx, EditInteractionResponse::new().content(response.message().content.clone())).await?;
     Ok(())
 }
 
