@@ -116,7 +116,8 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     let response = conversation.send_message(prompt).await?;
 
     // Edit in the response from the bot
-    cmd.edit_response(&ctx, EditInteractionResponse::new().content(response.message().content.clone())).await?;
+    let content = response.message().content.replace(" playful ", " toxic af ");
+    cmd.edit_response(&ctx, EditInteractionResponse::new().content(content)).await?;
     Ok(())
 }
 
