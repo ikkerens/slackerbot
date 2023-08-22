@@ -11,7 +11,10 @@ use serenity::{
 };
 use tiktoken_rs::CoreBPE;
 
-use crate::{commands::send_ephemeral_message, util::ChatGPTTypeMapKey};
+use crate::{
+    commands::{edit_interaction, send_ephemeral_message},
+    util::ChatGPTTypeMapKey,
+};
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_command(
@@ -66,22 +69,21 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
             break;
         }
     }
+    drop(msg_iter);
 
     if messages.len() < 50 {
-        cmd.edit_response(
-            &ctx,
-            EditInteractionResponse::new().content(
-                "Look, We're talking about at most 50 messages in the last 8 hours, surely you can just scroll up.",
-            ),
+        return edit_interaction(
+            ctx,
+            cmd,
+            "Look, We're talking about at most 50 messages in the last 8 hours, surely you can just scroll up.",
         )
-        .await?;
-        return Ok(());
+        .await;
     }
 
     // Then decide how much context we want
     let context = min(5 + (messages.len() / 100), 10);
     let prompt = format!(
-        "Please summarize the discussed subjects in at most {context} bullet points, use usernames where reasonable."
+        "Please summarize the discussed subjects using at most {context} bullet points, use usernames where reasonable."
     );
 
     // Sort it by timestamp, so it all makes sense
@@ -95,7 +97,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     history.push(ChatMessage { role: Role::System, content: prompt.clone() });
 
     // Calculate their cost, and determine a remaining amount
-    let mut remaining = 4096 - num_tokens_from_messages(&bpe, &history)?;
+    let mut remaining = 8192 - num_tokens_from_messages(&bpe, &history)?;
 
     for message in messages.into_iter().rev() {
         // Convert it into a GPT message
@@ -114,9 +116,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     // Send it all off, prompting ChatGPT to write a summary.
     let response = conversation.send_message(prompt).await?;
-
-    // Edit in the response from the bot
-    cmd.edit_response(&ctx, EditInteractionResponse::new().content(response.message().content.clone())).await?;
+    cmd.edit_response(&ctx, EditInteractionResponse::new().content(response.message().content.to_owned())).await?;
     Ok(())
 }
 

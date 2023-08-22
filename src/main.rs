@@ -9,7 +9,7 @@ use chatgpt::config::{ChatGPTEngine, ModelConfigurationBuilder};
 use sea_orm::Database;
 use serenity::{client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
 use tiktoken_rs::cl100k_base;
-use tokio::sync::Mutex;
+use tokio::{select, sync::Mutex};
 use tracing_subscriber::filter::EnvFilter;
 
 use migration::{Migrator, MigratorTrait};
@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
 
     let chatgpt = ChatGPT::new_with_config(
         env::var("CHATGPT_TOKEN").map_err(|_| anyhow!("No CHATGPT_TOKEN env var"))?,
-        ModelConfigurationBuilder::default().engine(ChatGPTEngine::Gpt35Turbo).build()?,
+        ModelConfigurationBuilder::default().engine(ChatGPTEngine::Gpt4).max_tokens(4096_u32).build()?,
     )?;
 
     {
@@ -94,8 +94,14 @@ async fn main() -> Result<()> {
     }
 
     info!("Setup complete. Starting bot...");
-    tokio::spawn(wait_for_shutdown(discord_client.shard_manager.clone()));
-    Ok(discord_client.start_autosharded().await?)
+    select! {
+        _ = wait_for_shutdown(discord_client.shard_manager.clone()) => {
+            Ok(())
+        },
+        result = discord_client.start_autosharded() => {
+            Ok(result?)
+        }
+    }
 }
 
 async fn wait_for_shutdown(shard_manager: Arc<Mutex<ShardManager>>) {

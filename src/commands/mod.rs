@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use serenity::{
     all::{CommandDataOption, CommandDataOptionValue, CommandInteraction},
-    builder::{CreateInteractionResponse, CreateInteractionResponseMessage},
+    builder::{CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse},
     client::Context,
 };
 
@@ -70,6 +70,9 @@ async fn send_ephemeral_message(ctx: Context, cmd: CommandInteraction, error: &s
         .await?)
 }
 
+async fn edit_interaction(ctx: Context, cmd: CommandInteraction, error: &str) -> Result<()> {
+    Ok(cmd.edit_response(ctx, EditInteractionResponse::new().content(error)).await.map(|_| ())?)
+}
 fn unwrap_options(options: &[CommandDataOption], first: bool) -> String {
     if options.is_empty() {
         return if first { "" } else { "None" }.to_string();

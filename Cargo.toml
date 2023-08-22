@@ -19,7 +19,7 @@ reqwest = { version = "0.11", default-features = false, features = ["json", "gzi
 chrono = "0.4"
 
 # Database
-sea-orm = { version = "0.11", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
+sea-orm = { version = "0.12", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
 entity = { path = "./entity" }
 migration = { path = "./migration" }
 
@@ -37,8 +37,8 @@ hmac = "0.12"
 sha2 = "0.10"
 
 # TLDR command
-chatgpt_rs = "1.1"
-tiktoken-rs = { version = "0.4", features = [ "async-openai" ] }
+chatgpt_rs = "1.2"
+tiktoken-rs = { version = "0.5", features = [ "async-openai" ] }
 
 # Util
 duration-str = "0.5"
