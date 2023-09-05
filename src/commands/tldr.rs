@@ -33,7 +33,9 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     // Tell the user the bot is thinking, as ChatGPT API is not super fast.
     cmd.create_response(&ctx, CreateInteractionResponse::Defer(CreateInteractionResponseMessage::new())).await?;
 
-    let Some(channel) = cmd.channel_id.to_channel(&ctx).await?.guild() else { return send_ephemeral_message(ctx, cmd, "That is not a valid channel.").await; };
+    let Some(channel) = cmd.channel_id.to_channel(&ctx).await?.guild() else {
+        return send_ephemeral_message(ctx, cmd, "That is not a valid channel.").await;
+    };
 
     // Start a conversation and direct ChatGPT with an initial prompt
     let mut conversation =
@@ -97,7 +99,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     history.push(ChatMessage { role: Role::System, content: prompt.clone() });
 
     // Calculate their cost, and determine a remaining amount
-    let mut remaining = 8192 - num_tokens_from_messages(&bpe, &history)?;
+    let mut remaining = 6144 - num_tokens_from_messages(&bpe, &history)?;
 
     for message in messages.into_iter().rev() {
         // Convert it into a GPT message

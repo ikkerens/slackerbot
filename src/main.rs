@@ -4,12 +4,14 @@ extern crate tracing;
 use std::{env, num::NonZeroU64, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use chatgpt::client::ChatGPT;
-use chatgpt::config::{ChatGPTEngine, ModelConfigurationBuilder};
+use chatgpt::{
+    client::ChatGPT,
+    config::{ChatGPTEngine, ModelConfigurationBuilder},
+};
 use sea_orm::Database;
 use serenity::{client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
 use tiktoken_rs::cl100k_base;
-use tokio::{select, sync::Mutex};
+use tokio::select;
 use tracing_subscriber::filter::EnvFilter;
 
 use migration::{Migrator, MigratorTrait};
@@ -62,7 +64,7 @@ async fn main() -> Result<()> {
 
     let chatgpt = ChatGPT::new_with_config(
         env::var("CHATGPT_TOKEN").map_err(|_| anyhow!("No CHATGPT_TOKEN env var"))?,
-        ModelConfigurationBuilder::default().engine(ChatGPTEngine::Gpt4).max_tokens(4096_u32).build()?,
+        ModelConfigurationBuilder::default().engine(ChatGPTEngine::Gpt4).max_tokens(2048_u32).build()?,
     )?;
 
     {
@@ -104,11 +106,11 @@ async fn main() -> Result<()> {
     }
 }
 
-async fn wait_for_shutdown(shard_manager: Arc<Mutex<ShardManager>>) {
+async fn wait_for_shutdown(shard_manager: Arc<ShardManager>) {
     if let Err(e) = wait_for_signal().await {
         error!("Could not register interrupt signals: {}", e);
         return;
     }
 
-    shard_manager.lock().await.shutdown_all().await
+    shard_manager.shutdown_all().await
 }
