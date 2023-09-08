@@ -188,7 +188,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2 0.5.3",
- "time 0.3.28",
+ "time",
  "url",
 ]
 
@@ -817,9 +817,9 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "bytes"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89b2fd2a0dcf38d7971e2194b6b6eebab45ae01067456a7fd93d5547a61b70be"
+checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
 
 [[package]]
 name = "bytestring"
@@ -879,9 +879,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chatgpt_rs"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a098237a651124b30eaec5b5f53d86727fb1f9488827b49c94321fab3e62b932"
+checksum = "93733474b6e88c48ae53b0254f0456b063424200d67f9df23189142ab8ca4012"
 dependencies = [
  "derive_builder",
  "reqwest",
@@ -894,16 +894,15 @@ dependencies = [
 
 [[package]]
 name = "chrono"
-version = "0.4.28"
+version = "0.4.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95ed24df0632f708f5f6d8082675bef2596f7084dee3dd55f632290bf35bfe0f"
+checksum = "defd4e7873dbddba6c7c91e199c7fcb946abc4a6a4ac3195400bcfb01b5de877"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
  "js-sys",
  "num-traits",
  "serde",
- "time 0.1.45",
  "wasm-bindgen",
  "windows-targets",
 ]
@@ -982,7 +981,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
 dependencies = [
  "percent-encoding",
- "time 0.3.28",
+ "time",
  "version_check",
 ]
 
@@ -1233,7 +1232,7 @@ dependencies = [
  "rust_decimal",
  "serde",
  "thiserror",
- "time 0.3.28",
+ "time",
 ]
 
 [[package]]
@@ -1548,7 +1547,7 @@ dependencies = [
  "cfg-if",
  "js-sys",
  "libc",
- "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasi",
  "wasm-bindgen",
 ]
 
@@ -2099,7 +2098,7 @@ checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
 dependencies = [
  "libc",
  "log",
- "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasi",
  "windows-sys",
 ]
 
@@ -2194,9 +2193,9 @@ dependencies = [
 
 [[package]]
 name = "oauth2"
-version = "4.4.1"
+version = "4.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09a6e2a2b13a56ebeabba9142f911745be6456163fd6c3d361274ebcd891a80c"
+checksum = "c38841cdd844847e3e7c8d29cef9dcfed8877f8f56f9071f77843ecf3baf937f"
 dependencies = [
  "base64 0.13.1",
  "chrono",
@@ -2945,7 +2944,7 @@ dependencies = [
  "sqlx",
  "strum",
  "thiserror",
- "time 0.3.28",
+ "time",
  "tracing",
  "url",
  "uuid",
@@ -3013,7 +3012,7 @@ dependencies = [
  "rust_decimal",
  "sea-query-derive",
  "serde_json",
- "time 0.3.28",
+ "time",
  "uuid",
 ]
 
@@ -3029,7 +3028,7 @@ dependencies = [
  "sea-query",
  "serde_json",
  "sqlx",
- "time 0.3.28",
+ "time",
  "uuid",
 ]
 
@@ -3173,12 +3172,12 @@ dependencies = [
 [[package]]
 name = "serenity"
 version = "0.11.5"
-source = "git+https://github.com/serenity-rs/serenity?branch=next#944e53c34c3f8f6263421f897f4aa75cece59b04"
+source = "git+https://github.com/serenity-rs/serenity?branch=next#f4be36c9f001d0ea9cd2537ce538d00c415b2ca2"
 dependencies = [
  "arrayvec",
  "async-trait",
  "base64 0.21.3",
- "bitflags 1.3.2",
+ "bitflags 2.4.0",
  "bytes",
  "chrono",
  "dashmap",
@@ -3193,7 +3192,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde_json",
- "time 0.3.28",
+ "time",
  "tokio",
  "tokio-tungstenite",
  "tracing",
@@ -3424,7 +3423,7 @@ dependencies = [
  "smallvec",
  "sqlformat",
  "thiserror",
- "time 0.3.28",
+ "time",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -3513,7 +3512,7 @@ dependencies = [
  "sqlx-core",
  "stringprep",
  "thiserror",
- "time 0.3.28",
+ "time",
  "tracing",
  "uuid",
  "whoami",
@@ -3558,7 +3557,7 @@ dependencies = [
  "sqlx-core",
  "stringprep",
  "thiserror",
- "time 0.3.28",
+ "time",
  "tracing",
  "uuid",
  "whoami",
@@ -3583,7 +3582,7 @@ dependencies = [
  "percent-encoding",
  "serde",
  "sqlx-core",
- "time 0.3.28",
+ "time",
  "tracing",
  "url",
  "uuid",
@@ -3719,17 +3718,6 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.1.45"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b797afad3f312d1c66a56d11d0316f916356d11bd158fbc6ca6389ff6bf805a"
-dependencies = [
- "libc",
- "wasi 0.10.0+wasi-snapshot-preview1",
- "winapi",
-]
-
-[[package]]
-name = "time"
 version = "0.3.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17f6bb557fd245c28e6411aa56b6403c689ad95061f50e4be16c274e70a17e48"
@@ -3824,9 +3812,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec509ac96e9a0c43427c74f003127d953a265737636129424288d27cb5c4b12c"
+checksum = "2b2dbec703c26b00d74844519606ef15d09a7d6857860f84ad223dec002ddea2"
 dependencies = [
  "futures-util",
  "log",
@@ -3943,9 +3931,9 @@ checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
 
 [[package]]
 name = "tungstenite"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15fba1a6d6bb030745759a9a2a588bfe8490fc8b4751a277db3a0be1c9ebbf67"
+checksum = "e862a1c4128df0112ab625f55cd5c934bcb4312ba80b39ae4b4835a3fd58e649"
 dependencies = [
  "byteorder",
  "bytes",
@@ -3959,7 +3947,6 @@ dependencies = [
  "thiserror",
  "url",
  "utf-8",
- "webpki",
 ]
 
 [[package]]
@@ -4093,9 +4080,9 @@ checksum = "9d5b2c62b4012a3e1eca5a7e077d13b3bf498c4073e33ccd58626607748ceeca"
 
 [[package]]
 name = "walkdir"
-version = "2.3.3"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36df944cda56c7d8d8b7496af378e6b16de9284591917d307c9b4d313c44e698"
+checksum = "d71d857dc86794ca4c280d616f7da00d2dbfd8cd788846559a6813e6aa4b54ee"
 dependencies = [
  "same-file",
  "winapi-util",
@@ -4109,12 +4096,6 @@ checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
 dependencies = [
  "try-lock",
 ]
-
-[[package]]
-name = "wasi"
-version = "0.10.0+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasi"
@@ -4209,16 +4190,6 @@ checksum = "9b85cbef8c220a6abc02aefd892dfc0fc23afb1c6a426316ec33253a3877249b"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "webpki"
-version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0e74f82d49d545ad128049b7e88f6576df2da6b02e9ce565c6f533be576957e"
-dependencies = [
- "ring",
- "untrusted",
 ]
 
 [[package]]

@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use std::{env, num::NonZeroU64, sync::Arc};
+use std::{env, num::NonZeroU64, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, Result};
 use chatgpt::{
@@ -16,10 +16,9 @@ use tracing_subscriber::filter::EnvFilter;
 
 use migration::{Migrator, MigratorTrait};
 
-use crate::util::ChatGPTTypeMapKey;
 use crate::{
     handler::Handler,
-    util::{wait_for_signal, DatabaseTypeMapKey},
+    util::{wait_for_signal, ChatGPTTypeMapKey, DatabaseTypeMapKey},
     web::auth::Client,
 };
 
@@ -64,7 +63,11 @@ async fn main() -> Result<()> {
 
     let chatgpt = ChatGPT::new_with_config(
         env::var("CHATGPT_TOKEN").map_err(|_| anyhow!("No CHATGPT_TOKEN env var"))?,
-        ModelConfigurationBuilder::default().engine(ChatGPTEngine::Gpt4).max_tokens(2048_u32).build()?,
+        ModelConfigurationBuilder::default()
+            .engine(ChatGPTEngine::Gpt4)
+            .timeout(Duration::from_secs(30))
+            .max_tokens(2048_u32)
+            .build()?,
     )?;
 
     {
