@@ -48,15 +48,15 @@ async fn ingest(
 
     let inserted: quote::Model = quote::ActiveModel {
         id: Default::default(),
-        server_id: Set(member.guild_id.0.get() as i64),
-        channel_id: Set(channel_id.0.get() as i64),
+        server_id: Set(member.guild_id.get() as i64),
+        channel_id: Set(channel_id.get() as i64),
         channel_name: Set(channel_name(&ctx, channel_id).await?),
-        message_id: Set(message.as_ref().map(|msg| msg.id.0.get() as i64)),
+        message_id: Set(message.as_ref().map(|msg| msg.id.get() as i64)),
         timestamp: Set(message
             .map(|m| m.timestamp)
             .unwrap_or_else(Timestamp::now)
             .with_timezone(&FixedOffset::east_opt(0).unwrap())),
-        author_id: Set(member.user_id.0.get() as i64),
+        author_id: Set(member.user_id.get() as i64),
         author: Set(member.user_name),
         text: Set(content),
         author_image: avatar,

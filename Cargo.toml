@@ -24,9 +24,9 @@ entity = { path = "./entity" }
 migration = { path = "./migration" }
 
 # Web
-actix-web = "4.3"
+actix-web = "4.4"
 actix-files = "0.6"
-handlebars = { version = "4.3", features = ["dir_source"] }
+handlebars = { version = "4.4", features = ["dir_source"] }
 serde = "1.0"
 serde_json = "1.0"
 
@@ -41,7 +41,7 @@ chatgpt_rs = "1.2"
 tiktoken-rs = { version = "0.5", features = [ "async-openai" ] }
 
 # Util
-duration-str = "0.5"
+duration-str = "0.7"
 rand = "0.8"
 
 [profile.release]

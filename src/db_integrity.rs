@@ -12,7 +12,7 @@ use crate::{commands::rolebutton_post_check_for_update, util::DatabaseTypeMapKey
 pub(crate) async fn guild_role_delete(ctx: Context, guild_id: GuildId, role_id: RoleId) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let mut server = match RoleButtonServer::find()
-        .filter(role_button_server::Column::ServerId.eq(guild_id.0.get()))
+        .filter(role_button_server::Column::ServerId.eq(guild_id.get()))
         .one(&db)
         .await?
     {
@@ -29,7 +29,7 @@ pub(crate) async fn guild_role_delete(ctx: Context, guild_id: GuildId, role_id: 
         None => return Err(anyhow!("Guild with roles but no emojis")),
     };
 
-    let index = roles.iter().position(|x| *x == role_id.0.get() as i64);
+    let index = roles.iter().position(|x| *x == role_id.get() as i64);
     match index {
         Some(index) => {
             roles.remove(index);

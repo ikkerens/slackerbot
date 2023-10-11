@@ -28,7 +28,9 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 }
 
 pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
-    let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
+    let Some(guild_id) = cmd.guild_id else {
+        return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await;
+    };
 
     let permissions = match cmd.member.as_ref().and_then(|m| m.permissions) {
         Some(p) => p,
@@ -48,8 +50,8 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
     Quote::delete_many()
-        .filter(quote::Column::AuthorId.eq(user_id.0.get()))
-        .filter(quote::Column::ServerId.eq(guild_id.0.get()))
+        .filter(quote::Column::AuthorId.eq(user_id.get()))
+        .filter(quote::Column::ServerId.eq(guild_id.get()))
         .exec(&db)
         .await?;
     send_ephemeral_message(ctx, cmd, &format!("Quotes by {user_name} deleted!")).await

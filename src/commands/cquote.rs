@@ -32,7 +32,9 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 
 pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
+    let Some(guild_id) = cmd.guild_id else {
+        return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await;
+    };
     let channel = match cmd.data.options.first().map(|id| &id.value) {
         Some(CommandDataOptionValue::Channel(channel)) => channel,
         None => &cmd.channel_id,
@@ -42,13 +44,14 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     let ids: Vec<i64> = Quote::find()
         .select_only()
         .column(quote::Column::Id)
-        .filter(quote::Column::ServerId.eq(guild_id.0.get()))
-        .filter(quote::Column::ChannelId.eq(channel.0.get()))
+        .filter(quote::Column::ServerId.eq(guild_id.get()))
+        .filter(quote::Column::ChannelId.eq(channel.get()))
         .into_tuple()
         .all(&db)
         .await?;
     let Some(chosen_random) = ids.choose(&mut thread_rng()) else {
-        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes for that channel, do none exist?").await
+        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes for that channel, do none exist?")
+            .await;
     };
 
     let quote = Quote::find_by_id(*chosen_random).one(&db).await?;

@@ -24,7 +24,9 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 }
 
 pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
-    let Some(guild_id) = cmd.guild_id else {return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await};
+    let Some(guild_id) = cmd.guild_id else {
+        return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await;
+    };
     let id = match cmd.data.options.first().map(|id| &id.value) {
         Some(CommandDataOptionValue::Integer(id)) => *id,
         _ => return send_ephemeral_message(ctx, cmd, "No quote id received").await,
@@ -32,7 +34,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
 
-    match Quote::find_by_id(id).filter(quote::Column::ServerId.eq(guild_id.0.get())).one(&db).await? {
+    match Quote::find_by_id(id).filter(quote::Column::ServerId.eq(guild_id.get())).one(&db).await? {
         Some(quote) => post_quote(&ctx, quote, cmd.channel_id, Some(cmd)).await,
         None => send_ephemeral_message(ctx, cmd, "Quote with that id does not exist!").await,
     }

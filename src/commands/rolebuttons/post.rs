@@ -28,7 +28,10 @@ pub(super) async fn handle(
 ) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
     let Some(server) =
-        RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.0.get())).one(&db).await? else { return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await };
+        RoleButtonServer::find().filter(role_button_server::Column::ServerId.eq(guild_id.get())).one(&db).await?
+    else {
+        return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await;
+    };
 
     let existing_message = match server.post_channel_id.zip(server.post_message_id) {
         Some((channel, message)) => ChannelId::from(channel as u64).message(&ctx, message as u64).await.ok(),
@@ -55,8 +58,8 @@ pub(super) async fn handle(
         )
         .await?;
     let mut db_server = server.into_active_model();
-    db_server.post_channel_id = Set(Some(message.channel_id.0.get() as i64));
-    db_server.post_message_id = Set(Some(message.id.0.get() as i64));
+    db_server.post_channel_id = Set(Some(message.channel_id.get() as i64));
+    db_server.post_message_id = Set(Some(message.id.get() as i64));
     db_server.save(&db).await?;
 
     cmd.create_response(
@@ -105,7 +108,9 @@ async fn create_components(
 
     for (index, role) in server.roles.iter().enumerate() {
         let role_id = RoleId::from(*role as u64);
-        let Some(emoji_str) = server.role_emojis.get(index) else { return Err(anyhow!("Role without emoji on that index")) };
+        let Some(emoji_str) = server.role_emojis.get(index) else {
+            return Err(anyhow!("Role without emoji on that index"));
+        };
         let emoji = emoji_str.parse::<ReactionType>()?;
 
         let role = match role_id.to_role_cached(ctx) {

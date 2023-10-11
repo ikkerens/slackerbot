@@ -27,13 +27,15 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
 
 pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Result<()> {
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let Some(guild_id) = cmd.guild_id else { return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await };
+    let Some(guild_id) = cmd.guild_id else {
+        return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await;
+    };
 
     // First we find a collection of IDs we can choose from
     let ids: Vec<i64> = Quote::find()
         .select_only()
         .column(quote::Column::Id)
-        .filter(quote::Column::ServerId.eq(guild_id.0.get()))
+        .filter(quote::Column::ServerId.eq(guild_id.get()))
         .into_tuple()
         .all(&db)
         .await?;
@@ -44,7 +46,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     // Then we filter our id list and choose a random quote
     let Some(chosen_random) = ids.iter().filter(|v| !blacklist.contains(*v)).choose(&mut thread_rng()) else {
         drop(blacklist); // Drop our blacklist reference early
-        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes, do none exist?").await
+        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes, do none exist?").await;
     };
 
     // Update our blacklist

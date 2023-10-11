@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
-use std::{env, num::NonZeroU64, sync::Arc, time::Duration};
+use std::{env, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, Result};
 use chatgpt::{
@@ -75,10 +75,10 @@ async fn main() -> Result<()> {
         let client_secret = env::var("OAUTH_SECRET").map_err(|_| anyhow!("No OAUTH_SECRET env var"))?;
         let redirect_uri = env::var("OAUTH_REDIRECT").map_err(|_| anyhow!("No OAUTH_REDIRECT env var"))?;
         let jwt_secret = env::var("JWT_SECRET").map_err(|_| anyhow!("No JWT_SECRET env var"))?;
-        let web_whitelist_guild_id = GuildId(
+        let web_whitelist_guild_id = GuildId::new(
             env::var("WEB_WHITELIST_GUILD_ID")
                 .map_err(|_| anyhow!("No WEB_WHITELIST_GUILD_ID"))?
-                .parse::<NonZeroU64>()
+                .parse::<u64>()
                 .map_err(|e| anyhow!("Could not parse guild id: {}", e))?,
         );
         let auth_client = Client::new(
