@@ -201,7 +201,9 @@ pub(super) async fn handle_command(handler: &Handler, ctx: Context, cmd: Command
             *status = NotReady;
         }
     }
-    readycheck_msg.edit(&ctx, EditMessage::new().embed(create_embed(&members_that_match, true))).await?;
+    readycheck_msg
+        .edit(&ctx, EditMessage::new().components(vec![]).embed(create_embed(&members_that_match, true)))
+        .await?;
 
     // And then wait 10 minutes before we clean up the readycheck
     sleep(Duration::from_secs(10 * 60)).await;
