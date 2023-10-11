@@ -41,7 +41,6 @@ chatgpt_rs = "1.2"
 tiktoken-rs = { version = "0.5", features = [ "async-openai" ] }
 
 # Util
-duration-str = "0.7"
 rand = "0.8"
 
 [profile.release]

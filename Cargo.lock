@@ -1223,20 +1223,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
-name = "duration-str"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e172e85f305d6a442b250bf40667ffcb91a24f52c9a1ca59e2fa991ac9b7790"
-dependencies = [
- "chrono",
- "nom",
- "rust_decimal",
- "serde",
- "thiserror",
- "time",
-]
-
-[[package]]
 name = "either"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3260,7 +3246,6 @@ dependencies = [
  "anyhow",
  "chatgpt_rs",
  "chrono",
- "duration-str",
  "entity",
  "handlebars",
  "hmac",
