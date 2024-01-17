@@ -26,10 +26,10 @@ pub(super) async fn handle(ctx: Context, cmd: CommandInteraction, guild_id: Guil
         Some(server) => server.into_active_model(),
         None => role_button_server::ActiveModel { server_id: Set(guild_id.get() as i64), ..Default::default() },
     };
-    let Some(CommandDataOptionValue::SubCommand(args)) = cmd.data.options.get(0).map(|o| &o.value) else {
+    let Some(CommandDataOptionValue::SubCommand(args)) = cmd.data.options.first().map(|o| &o.value) else {
         return Err(anyhow!("Could not parse subcommand options"));
     };
-    let Some(CommandDataOptionValue::Role(role_id)) = args.get(0).map(|r| &r.value) else {
+    let Some(CommandDataOptionValue::Role(role_id)) = args.first().map(|r| &r.value) else {
         return send_ephemeral_message(ctx, cmd, "Could not parse role.").await;
     };
     let Some(CommandDataOptionValue::String(emoji)) = args.get(1).map(|r| &r.value) else {

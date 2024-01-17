@@ -25,10 +25,10 @@ pub(super) async fn handle(ctx: Context, cmd: CommandInteraction, guild_id: Guil
         Some(server) => server.into_active_model(),
         None => return send_ephemeral_message(ctx, cmd, "Nothing configured in this server.").await,
     };
-    let Some(CommandDataOptionValue::SubCommand(args)) = cmd.data.options.get(0).map(|o| &o.value) else {
+    let Some(CommandDataOptionValue::SubCommand(args)) = cmd.data.options.first().map(|o| &o.value) else {
         return Err(anyhow!("Could not fetch arguments for remove"));
     };
-    let Some(CommandDataOptionValue::Role(role)) = args.get(0).map(|r| &r.value) else {
+    let Some(CommandDataOptionValue::Role(role)) = args.first().map(|r| &r.value) else {
         return send_ephemeral_message(ctx, cmd, "Could not parse role.").await;
     };
 

@@ -308,7 +308,7 @@ async fn setup(handler: &Handler, ctx: &Context, cmd: &CommandInteraction) -> Re
                     return Ok(SetupResult::Invalid("Could not parse duration."));
                 };
                 let Some(selected_time): Option<Duration> =
-                    values.get(0).and_then(|s| s.parse().ok()).map(Duration::from_secs)
+                    values.first().and_then(|s| s.parse().ok()).map(Duration::from_secs)
                 else {
                     return Ok(SetupResult::Invalid("Could not parse duration."));
                 };

@@ -9,7 +9,7 @@ use chatgpt::{
     config::{ChatGPTEngine, ModelConfigurationBuilder},
 };
 use sea_orm::Database;
-use serenity::{client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
+use serenity::{cache, client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
 use tiktoken_rs::cl100k_base;
 use tokio::select;
 use tracing_subscriber::filter::EnvFilter;
@@ -44,6 +44,8 @@ async fn main() -> Result<()> {
     };
 
     let mut discord_client = {
+        let mut settings = cache::Settings::default();
+        settings.max_messages = 100;
         let discord_token = env::var("DISCORD_TOKEN").map_err(|_| anyhow!("No DISCORD_TOKEN env var"))?;
         ClientBuilder::new(
             discord_token,
@@ -53,12 +55,9 @@ async fn main() -> Result<()> {
                 | GatewayIntents::GUILDS
                 | GatewayIntents::GUILD_MEMBERS,
         )
-        .event_handler(Handler::new())
-        .cache_settings(|c| {
-            c.max_messages = 300;
-            c
-        })
-        .await?
+            .event_handler(Handler::new())
+            .cache_settings(settings)
+            .await?
     };
 
     let chatgpt = ChatGPT::new_with_config(

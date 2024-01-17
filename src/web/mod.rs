@@ -2,7 +2,7 @@ use actix_files::Files;
 use actix_web::{web::Data, App, HttpServer};
 use anyhow::Result;
 use chrono::Local;
-use handlebars::{handlebars_helper, html_escape, Handlebars};
+use handlebars::{handlebars_helper, html_escape, Handlebars, DirectorySourceOptions};
 use sea_orm::{prelude::DateTimeWithTimeZone, DatabaseConnection};
 
 pub mod auth;
@@ -16,7 +16,7 @@ pub(crate) fn start(db: DatabaseConnection, auth: auth::Client) -> Result<()> {
     handlebars.set_strict_mode(true);
     handlebars.register_helper("dateformat", Box::new(dateformat));
     handlebars.register_helper("htmlescape", Box::new(htmlescape));
-    handlebars.register_templates_directory(".hbs", "web/templates/")?;
+    handlebars.register_templates_directory("web/templates/", DirectorySourceOptions::default())?;
 
     let actix = HttpServer::new(move || {
         App::new()
