@@ -37,10 +37,7 @@ pub(crate) async fn handle_ingress(ctx: &Context, msg: &Message) -> Result<()> {
     let _guard = LOCK.get_or_init(|| Mutex::new(())).lock().await;
 
     let db = ctx.data.read().await.get::<DatabaseTypeMapKey>().unwrap().clone();
-    let mut counter = match kvstore::get::<CCounter>(&db, COUNTER_KEY).await? {
-        Some(counter) => counter,
-        None => CCounter::default(),
-    };
+    let mut counter = kvstore::get::<CCounter>(&db, COUNTER_KEY).await?.unwrap_or_else(CCounter::default);
 
     counter.count += 1;
     kvstore::set(&db, COUNTER_KEY, &counter).await?;

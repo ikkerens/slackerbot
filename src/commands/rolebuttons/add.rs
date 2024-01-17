@@ -39,19 +39,13 @@ pub(super) async fn handle(ctx: Context, cmd: CommandInteraction, guild_id: Guil
         return send_ephemeral_message(ctx, cmd, "Could not parse emoji").await;
     }
 
-    let mut roles = match server.roles.take() {
-        Some(roles) => roles,
-        None => vec![],
-    };
+    let mut roles = server.roles.take().unwrap_or_else(Vec::new);
 
     if roles.contains(&(role_id.get() as i64)) {
         return send_ephemeral_message(ctx, cmd, "That role is already registered.").await;
     }
 
-    let mut emojis = match server.role_emojis.take() {
-        Some(emojis) => emojis,
-        None => vec![],
-    };
+    let mut emojis = server.role_emojis.take().unwrap_or_else(Vec::new);
 
     roles.push(role_id.get() as i64);
     emojis.push(emoji.clone());
