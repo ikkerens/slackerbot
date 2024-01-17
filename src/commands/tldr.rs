@@ -3,12 +3,8 @@ use std::cmp::min;
 use anyhow::Result;
 use chatgpt::types::{ChatMessage, Role};
 use chrono::{Duration, Utc};
-use serenity::{
-    all::{Command, CommandInteraction, CreateInteractionResponseMessage, Member, Message, User},
-    builder::{CreateCommand, CreateInteractionResponse, EditInteractionResponse},
-    client::Context,
-    futures::StreamExt,
-};
+use serenity::{all::{Command, CommandInteraction, CreateInteractionResponseMessage, Member, Message, User}, builder::{CreateCommand, CreateInteractionResponse, EditInteractionResponse}, client::Context, Error, futures::StreamExt};
+use serenity::model::ModelError;
 use tiktoken_rs::CoreBPE;
 
 use crate::{
@@ -124,7 +120,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
 async fn message_to_gpt_message(ctx: &Context, msg: Message) -> Result<ChatMessage> {
     let context = if let Some(reference) = msg.referenced_message.as_ref() {
-        format!(", in reply to {}", resolve_name(&reference.author, reference.member(ctx).await.ok().as_ref()))
+        format!(", in reply to {}", resolve_name(&reference.author, reference.member(ctx).await.ok_or_log().as_ref()))
     } else {
         "".to_string()
     };
@@ -133,7 +129,7 @@ async fn message_to_gpt_message(ctx: &Context, msg: Message) -> Result<ChatMessa
         role: Role::System,
         content: format!(
             "{author} says{context}: \"{message}\"",
-            author = resolve_name(&msg.author, msg.member(&ctx).await.ok().as_ref()),
+            author = resolve_name(&msg.author, msg.member(&ctx).await.ok_or_log().as_ref()),
             message = msg.content_safe(ctx)
         ),
     })
@@ -155,4 +151,21 @@ fn num_tokens_from_messages(bpe: &CoreBPE, messages: &[ChatMessage]) -> Result<u
     }
     num_tokens += 3; // every reply is primed with <|start|>assistant<|message|>
     Ok(num_tokens as usize)
+}
+
+trait ResultExt<T> {
+    fn ok_or_log(self) -> Option<T>;
+}
+
+impl ResultExt<Member> for serenity::Result<Member> {
+    fn ok_or_log(self) -> Option<Member> {
+        match self {
+            Ok(m) => Some(m),
+            Err(Error::Model(ModelError::ItemMissing)) => None,
+            Err(e) => {
+                error!("Could not fetch member info: {}", e);
+                None
+            }
+        }
+    }
 }
