@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
 use chatgpt::client::ChatGPT;
+use chrono::{DateTime, Utc};
 use sea_orm::DatabaseConnection;
 use serenity::{
     builder::CreateAttachment,
@@ -10,7 +11,7 @@ use serenity::{
     prelude::TypeMapKey,
 };
 use tiktoken_rs::CoreBPE;
-use tokio::select;
+use tokio::{select, sync::Mutex};
 
 pub mod kvstore;
 
@@ -64,8 +65,18 @@ impl TypeMapKey for DatabaseTypeMapKey {
     type Value = DatabaseConnection;
 }
 
-pub(crate) struct ChatGPTTypeMapKey;
+pub(crate) struct TLDRTypeMapKey;
 
-impl TypeMapKey for ChatGPTTypeMapKey {
-    type Value = (Arc<ChatGPT>, Arc<CoreBPE>);
+impl TypeMapKey for TLDRTypeMapKey {
+    // ChatGPT is the connection library for GPT
+    // CoreBPE is our token counter
+    // The usage status is to throttle usage of the command
+    type Value = (Arc<ChatGPT>, Arc<CoreBPE>, Arc<Mutex<TLDRUsageStatus>>);
+}
+
+pub(crate) enum TLDRUsageStatus {
+    Unused,
+    Running(DateTime<Utc>),
+    // These two instants are a timeout for when the command becomes available again
+    Done(DateTime<Utc>),
 }

@@ -20,7 +20,7 @@ mod quote;
 mod readycheck;
 mod rolebuttons;
 mod rquote;
-mod tldr;
+pub(crate) mod tldr;
 mod uquote;
 mod voicequote;
 
