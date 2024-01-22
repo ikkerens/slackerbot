@@ -16,10 +16,10 @@ use crate::{
     util::{TLDRTypeMapKey, TLDRUsageStatus},
 };
 
-const GPT_MAX_TOKENS: u32 = 100000;
+const GPT_MAX_TOKENS: u32 = 9500;
 const GPT_API_TPM: u32 = 10000;
 // For some reason this needs to be set at API initialization
-pub(crate) const GPT_MAX_RESPONSE: u32 = 4096;
+pub(crate) const GPT_MAX_RESPONSE: u32 = 2048;
 
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_command(
@@ -108,7 +108,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
         messages.push(message);
 
-        if messages.len() >= 1000 {
+        if messages.len() >= 500 {
             break;
         }
     }
