@@ -82,7 +82,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         ));
 
     let mut messages = Vec::new(); // A place to store all the history to send to ChatGPT
-    let earliest = Utc::now() - Duration::days(1); // We don't want messages older than this
+    let earliest = Utc::now() - Duration::hours(16); // We don't want messages older than this
 
     // Get a history of messages
     let mut msg_iter = cmd.channel_id.messages_iter(&ctx).boxed();
