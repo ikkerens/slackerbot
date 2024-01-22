@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
         env::var("CHATGPT_TOKEN").map_err(|_| anyhow!("No CHATGPT_TOKEN env var"))?,
         ModelConfigurationBuilder::default()
             .engine(ChatGPTEngine::Custom("gpt-4-1106-preview"))
-            .timeout(Duration::from_secs(30))
+            .timeout(Duration::from_secs(60))
             .max_tokens(tldr::GPT_MAX_RESPONSE)
             .build()?,
     )?;
