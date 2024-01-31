@@ -1,7 +1,6 @@
 use std::{string::ToString, time::Duration};
 
 use anyhow::Result;
-use serenity::builder::EditInteractionResponse;
 use serenity::{
     all::{
         ButtonStyle, Command, CommandInteraction, ComponentInteraction, ComponentInteractionDataKind, RoleId, UserId,
@@ -9,7 +8,7 @@ use serenity::{
     builder::{
         CreateActionRow, CreateButton, CreateCommand, CreateEmbed, CreateInteractionResponse,
         CreateInteractionResponseMessage, CreateMessage, CreateSelectMenu, CreateSelectMenuKind,
-        CreateSelectMenuOption, EditMessage,
+        CreateSelectMenuOption, EditInteractionResponse, EditMessage,
     },
     client::Context,
     model::{channel::ReactionType, guild::Member, id::EmojiId, prelude::ChannelId, Colour, Permissions},

@@ -11,8 +11,7 @@ use chatgpt::{
 use sea_orm::Database;
 use serenity::{cache, client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
 use tiktoken_rs::cl100k_base;
-use tokio::select;
-use tokio::sync::Mutex;
+use tokio::{select, sync::Mutex};
 use tracing_subscriber::filter::EnvFilter;
 
 use migration::{Migrator, MigratorTrait};
@@ -65,7 +64,7 @@ async fn main() -> Result<()> {
     let chatgpt = ChatGPT::new_with_config(
         env::var("CHATGPT_TOKEN").map_err(|_| anyhow!("No CHATGPT_TOKEN env var"))?,
         ModelConfigurationBuilder::default()
-            .engine(ChatGPTEngine::Custom("gpt-4-1106-preview"))
+            .engine(ChatGPTEngine::Custom("gpt-4-turbo-preview"))
             .timeout(Duration::from_secs(60))
             .max_tokens(tldr::GPT_MAX_RESPONSE)
             .build()?,
