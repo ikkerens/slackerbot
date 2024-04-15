@@ -292,7 +292,11 @@ async fn setup(handler: &Handler, ctx: &Context, cmd: &CommandInteraction) -> Re
                     // First we try the role ID, as we can do this from the cache
                     let role_attempt = RoleId::new(generic_id.get());
 
-                    if role_attempt.to_role_cached(&interaction_ctx).is_some() {
+                    if cmd
+                        .guild_id // If we have a guild ID
+                        .and_then(|g| interaction_ctx.cache.guild(g))
+                        .map_or_else(Default::default, |g| g.roles.contains_key(&role_attempt))
+                    {
                         // ID is a known role
                         roles.push(role_attempt);
                     } else {

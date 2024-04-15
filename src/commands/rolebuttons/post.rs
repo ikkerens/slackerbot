@@ -113,7 +113,7 @@ async fn create_components(
         };
         let emoji = emoji_str.parse::<ReactionType>()?;
 
-        let role = match role_id.to_role_cached(ctx) {
+        let role = match ctx.cache.guild(guild_id).and_then(|g| g.roles.get(&role_id).cloned()) {
             Some(role) => role,
             None => {
                 let roles_cache = match roles.as_ref() {
