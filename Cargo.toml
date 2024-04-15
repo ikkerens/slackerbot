@@ -15,7 +15,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Discord
 serenity = { version = "0.12", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "rustls_backend"] }
-reqwest = { version = "0.11", default-features = false, features = ["json", "gzip", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "gzip", "rustls-tls"] }
 chrono = "0.4"
 
 # Database
@@ -24,7 +24,7 @@ entity = { path = "./entity" }
 migration = { path = "./migration" }
 
 # Web
-actix-web = "4.4"
+actix-web = "4.5"
 actix-files = "0.6"
 handlebars = { version = "5.1", features = ["dir_source"] }
 serde = "1.0"
