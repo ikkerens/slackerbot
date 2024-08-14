@@ -40,7 +40,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         .select_only()
         .column(quote::Column::Id)
         .filter(quote::Column::ServerId.eq(guild_id.get()))
-        .filter(quote::Column::Text.like(&format!("%{keyword}%")))
+        .filter(quote::Column::Text.contains(keyword))
         .into_tuple()
         .all(&db)
         .await?;
