@@ -14,7 +14,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Discord
-serenity = { version = "0.12", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "rustls_backend"] }
+# Serenity broke again, pending release of a version newer than June 9
+# serenity = { version = "0.12", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "rustls_backend"] }
+serenity = { git = "https://github.com/serenity-rs/serenity", branch = "current", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "rustls_backend"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "gzip", "rustls-tls"] }
 chrono = "0.4"
 

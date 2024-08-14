@@ -14,6 +14,7 @@ use crate::handler::Handler;
 mod ccounter;
 mod cquote;
 mod delete;
+mod kwquote;
 mod lamia;
 mod purge;
 mod quote;
@@ -28,6 +29,7 @@ pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     ccounter::register(ctx).await?;
     cquote::register(ctx).await?;
     delete::register(ctx).await?;
+    kwquote::register(ctx).await?;
     purge::register(ctx).await?;
     quote::register(ctx).await?;
     lamia::register(ctx).await?;
@@ -47,6 +49,7 @@ pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: Command
         "cum" => ccounter::handle_command(ctx, cmd).await,
         "cquote" => cquote::handle_command(ctx, cmd).await,
         "delete" => delete::handle_command(ctx, cmd).await,
+        "kwquote" => kwquote::handle_command(ctx, cmd).await,
         "purge" => purge::handle_command(ctx, cmd).await,
         "quote" => quote::handle_command(ctx, cmd).await,
         "days_since_lamia_horny" => lamia::handle_command(ctx, cmd).await,

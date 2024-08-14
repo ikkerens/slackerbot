@@ -15,7 +15,7 @@ pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_command(
         ctx,
         CreateCommand::new("uquote")
-            .description("Posts a random command by the specified user")
+            .description("Posts a random quote by the specified user")
             .dm_permission(false)
             .add_option(
                 CreateCommandOption::new(CommandOptionType::User, "user", "The user to get a random quote from.")

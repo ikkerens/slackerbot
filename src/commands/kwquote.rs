@@ -14,16 +14,12 @@ use crate::{commands::send_ephemeral_message, quote::post_quote, util::DatabaseT
 pub(super) async fn register(ctx: &Context) -> Result<()> {
     Command::create_global_command(
         ctx,
-        CreateCommand::new("cquote")
-            .description("Posts a random quote posted in this channel (or a specific one if provided)")
+        CreateCommand::new("kwquote")
+            .description("Posts a random quote containing a specific keyword")
             .dm_permission(false)
             .add_option(
-                CreateCommandOption::new(
-                    CommandOptionType::Channel,
-                    "channel",
-                    "The channel to get a random quote from (will default to current channel)",
-                )
-                .required(false),
+                CreateCommandOption::new(CommandOptionType::String, "keyword", "The keyword to search for.")
+                    .required(true),
             ),
     )
     .await?;
@@ -35,22 +31,21 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     let Some(guild_id) = cmd.guild_id else {
         return send_ephemeral_message(ctx, cmd, "This command can only be used in servers.").await;
     };
-    let channel = match cmd.data.options.first().map(|id| &id.value) {
-        Some(CommandDataOptionValue::Channel(channel)) => channel,
-        None => &cmd.channel_id,
-        _ => return send_ephemeral_message(ctx, cmd, "No channel received").await,
+    let keyword = match cmd.data.options.first().map(|id| &id.value) {
+        Some(CommandDataOptionValue::String(keyword)) => keyword,
+        _ => return send_ephemeral_message(ctx, cmd, "No keyword received").await,
     };
 
     let ids: Vec<i64> = Quote::find()
         .select_only()
         .column(quote::Column::Id)
         .filter(quote::Column::ServerId.eq(guild_id.get()))
-        .filter(quote::Column::ChannelId.eq(channel.get()))
+        .filter(quote::Column::Text.like(&format!("%{keyword}%")))
         .into_tuple()
         .all(&db)
         .await?;
     let Some(chosen_random) = ids.choose(&mut thread_rng()) else {
-        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes for that channel, do none exist?")
+        return send_ephemeral_message(ctx, cmd, "Could not find any random quotes for that keyword, do none exist?")
             .await;
     };
 
@@ -58,6 +53,6 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
 
     match quote {
         Some(quote) => post_quote(&ctx, quote, cmd.channel_id, Some(cmd)).await,
-        None => Err(anyhow!("Selected random channel quote that ended up not existing")),
+        None => Err(anyhow!("Selected random keyword quote that ended up not existing")),
     }
 }
