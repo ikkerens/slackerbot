@@ -15,7 +15,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(RoleButtonServer::PostChannelId).big_unsigned().null())
                     .col(ColumnDef::new(RoleButtonServer::PostMessageId).big_unsigned().null())
                     .col(ColumnDef::new(RoleButtonServer::Roles).array(ColumnType::BigInteger).not_null())
-                    .col(ColumnDef::new(RoleButtonServer::RoleEmojis).array(ColumnType::String(None)).not_null())
+                    .col(
+                        ColumnDef::new(RoleButtonServer::RoleEmojis)
+                            .array(ColumnType::String(StringLen::None))
+                            .not_null(),
+                    )
                     .to_owned(),
             )
             .await?;

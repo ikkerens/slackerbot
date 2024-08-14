@@ -18,10 +18,10 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Quote::MessageId).big_unsigned().unique_key().null())
                     .col(ColumnDef::new(Quote::AuthorId).big_unsigned().not_null())
                     .col(ColumnDef::new(Quote::Author).string().not_null())
-                    .col(ColumnDef::new(Quote::AuthorImage).blob(BlobSize::Medium).null())
+                    .col(ColumnDef::new(Quote::AuthorImage).blob().null())
                     .col(ColumnDef::new(Quote::Timestamp).timestamp_with_time_zone().not_null())
                     .col(ColumnDef::new(Quote::Text).string().not_null())
-                    .col(ColumnDef::new(Quote::Attachment).blob(BlobSize::Medium).null())
+                    .col(ColumnDef::new(Quote::Attachment).blob().null())
                     .col(ColumnDef::new(Quote::AttachmentName).string().null())
                     .to_owned(),
             )

@@ -10,7 +10,7 @@ use chatgpt::{
 };
 use sea_orm::Database;
 use serenity::{cache, client::ClientBuilder, gateway::ShardManager, model::id::GuildId, prelude::GatewayIntents};
-use tiktoken_rs::cl100k_base;
+use tiktoken_rs::o200k_base;
 use tokio::{select, sync::Mutex};
 use tracing_subscriber::filter::EnvFilter;
 
@@ -95,7 +95,7 @@ async fn main() -> Result<()> {
     {
         let mut data = discord_client.data.write().await;
         data.insert::<DatabaseTypeMapKey>(database);
-        data.insert::<TLDRTypeMapKey>((Arc::new(chatgpt), Arc::new(cl100k_base()?), Arc::new(Mutex::new(Unused))));
+        data.insert::<TLDRTypeMapKey>((Arc::new(chatgpt), Arc::new(o200k_base()?), Arc::new(Mutex::new(Unused))));
     }
 
     info!("Setup complete. Starting bot...");
