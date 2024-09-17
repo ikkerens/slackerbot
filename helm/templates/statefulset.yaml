@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "slackerbot.fullname" . }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      {{- include "slackerbot.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "slackerbot.fullname" . }}
+  template:
+    metadata:
+      labels:
+        {{- include "slackerbot.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - envFrom:
+            - secretRef:
+                name: {{ include "slackerbot.fullname" . }}
+            - configMapRef:
+                name: {{ include "slackerbot.fullname" . }}
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: uri
+                  name: {{ include "slackerbot.fullname" . }}-db-pguser-{{ include "slackerbot.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: IfNotPresent
+          name: {{ include "slackerbot.fullname" . }}
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+            requests:
+              cpu: 50m
+              memory: 30Mi
+          securityContext:
+            privileged: false
+      dnsPolicy: ClusterFirst
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: { }
+      terminationGracePeriodSeconds: 30
+

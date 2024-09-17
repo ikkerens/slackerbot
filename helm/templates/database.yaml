@@ -1,0 +1,21 @@
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: {{ include "slackerbot.fullname" . }}-db
+spec:
+  image: {{ .Values.database.image }}
+  postgresVersion: {{ .Values.database.version }}
+  port: 5432
+  users:
+    - name: {{ include "slackerbot.fullname" . }}
+      databases:
+        - {{ include "slackerbot.fullname" . }}
+  instances:
+    - dataVolumeClaimSpec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.database.size }}
+      name: main
+      replicas: 1
