@@ -20,12 +20,6 @@ spec:
                 name: {{ include "slackerbot.fullname" . }}
             - configMapRef:
                 name: {{ include "slackerbot.fullname" . }}
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  key: uri
-                  name: {{ include "slackerbot.fullname" . }}-db-pguser-{{ include "slackerbot.fullname" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: IfNotPresent
           name: {{ include "slackerbot.fullname" . }}
