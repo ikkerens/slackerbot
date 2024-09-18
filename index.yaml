@@ -3,6 +3,16 @@ entries:
   slackerbot:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2024-09-18T10:28:19.975760606Z"
+    description: A Helm chart for Kubernetes
+    digest: 19312bc85bb33df7ee721da4006d264056fd2a359c9c857fa9e499e350a8f84d
+    name: slackerbot
+    type: application
+    urls:
+    - https://github.com/ikkerens/slackerbot/releases/download/slackerbot-0.1.4/slackerbot-0.1.4.tgz
+    version: 0.1.4
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2024-09-18T09:34:52.231438217Z"
     description: A Helm chart for Kubernetes
     digest: f05e3af48d4dfda84c03bb5486403b229b0e9454c84a1c7700bf6c1ccfe86395
@@ -41,4 +51,4 @@ entries:
     urls:
     - https://github.com/ikkerens/slackerbot/releases/download/slackerbot-0.1.0/slackerbot-0.1.0.tgz
     version: 0.1.0
-generated: "2024-09-18T09:34:52.23147244Z"
+generated: "2024-09-18T10:28:19.975785192Z"
