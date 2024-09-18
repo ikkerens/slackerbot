@@ -13,7 +13,7 @@ spec:
         paths:
           - backend:
               service:
-                name: {{- include "slackerbot.fullname" . }}
+                name: {{ include "slackerbot.fullname" . }}
                 port:
                   number: {{ .Values.service.port }}
             path: /
