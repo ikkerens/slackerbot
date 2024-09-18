@@ -1,0 +1,20 @@
+# Default values for slackerbot.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: ikkerens/slackerbot
+  tag: latest
+
+imagePullSecrets: [ ]
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  port: 80
+
+appConfig:
+  hostname: ""
+  tlsSecretName: ""
+  oauthClientId: ""
+  webWhitelistGuildId: ""
