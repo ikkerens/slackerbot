@@ -19,12 +19,6 @@ spec:
             storage: {{ .Values.database.size }}
       name: main
       replicas: 1
-  init:
-    - name: init-script
-      script:
-        configMap:
-          name: {{ include "slackerbot.fullname" . }}-db-init
-          key: init.sql
   backups:
     pgbackrest:
       image: {{ .Values.database.backup.image }}
