@@ -19,3 +19,22 @@ spec:
             storage: {{ .Values.database.size }}
       name: main
       replicas: 1
+  backups:
+    pgbackrest:
+      image: {{ .Values.database.backup.image }}
+      configuration:
+        - secret:
+            name: {{ .Values.database.backup.s3secretName }}
+      global:
+        repo1-retention-full-type: time
+        repo1-retention-full: "14"
+        repo1-path: /{{ include "slackerbot.fullname" . }}
+      repos:
+        - name: repo1
+          schedules:
+            differential: 0 3 * * 1-6
+            full: 0 3 * * 0
+          s3:
+            bucket: {{ .Values.database.backup.s3bucket }}
+            endpoint: {{ .Values.database.backup.s3endpoint }}
+            region: {{ .Values.database.backup.s3region }}
