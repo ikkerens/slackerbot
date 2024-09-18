@@ -18,14 +18,3 @@ appConfig:
   tlsSecretName: ""
   oauthClientId: ""
   webWhitelistGuildId: ""
-
-database:
-  size: 1Gi
-  version: 16
-  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-16.4-0
-  backup:
-    image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.52.1-1
-    s3endpoint: ""
-    s3region: ""
-    s3bucket: ""
-    s3secretName: ""
