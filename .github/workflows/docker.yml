@@ -1,16 +1,20 @@
-name: Rust
+name: Release docker image
 
-on: [push]
+on:
+  push:
+    tags:
+      - '*.*.*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@v4
-      with:
-        name: ikkerens/slackerbot
-        username: ikkerens
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        snapshot: true
+      - uses: actions/checkout@v2
+
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@v5
+        with:
+          name: ikkerens/slackerbot
+          username: ikkerens
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tag_semver: true
