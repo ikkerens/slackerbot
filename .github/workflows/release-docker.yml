@@ -1,10 +1,12 @@
-name: Rust
+name: Release docker image
 
-on: [push]
+on:
+  push:
+    tags:
+      - '*.*.*'
 
 jobs:
   build:
-    if: "!startsWith(github.ref, 'refs/tags/')" # Only build on non-release pushes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -14,4 +16,5 @@ jobs:
           name: ikkerens/slackerbot
           username: ikkerens
           password: ${{ secrets.DOCKER_PASSWORD }}
-          snapshot: true
+          buildargs: BUILD_TYPE=release
+          tag_semver: true
