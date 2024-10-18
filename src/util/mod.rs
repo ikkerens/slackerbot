@@ -11,7 +11,7 @@ use serenity::{
     prelude::TypeMapKey,
 };
 use tiktoken_rs::CoreBPE;
-use tokio::{select, sync::Mutex};
+use tokio::{sync::Mutex};
 
 pub mod kvstore;
 
@@ -29,34 +29,6 @@ pub(crate) async fn download_file(url: &str) -> Result<Vec<u8>> {
 
 pub(crate) fn convert_bytes_to_attachment(name: impl ToString, bytes: Vec<u8>) -> CreateAttachment {
     CreateAttachment::bytes(bytes, name.to_string())
-}
-
-#[cfg(windows)]
-pub(super) async fn wait_for_signal() -> Result<()> {
-    tokio::signal::ctrl_c().await?;
-    info!("Received Ctrl+C, shutting down...");
-    Ok(())
-}
-
-#[cfg(unix)]
-pub(super) async fn wait_for_signal() -> Result<()> {
-    use tokio::signal::unix::{signal, SignalKind};
-
-    let mut interrupt = signal(SignalKind::interrupt())?;
-    let mut terminate = signal(SignalKind::terminate())?;
-
-    select! {
-        // Wait for SIGINT (which is sent on the first Ctrl+C)
-        _ = interrupt.recv() => {
-            info!("Received interrupt signal, shutting down...");
-        }
-        // Wait for SIGTERM
-        _ = terminate.recv() => {
-            info!("Received terminate signal, shutting down...");
-        }
-    };
-
-    Ok(())
 }
 
 pub(crate) struct DatabaseTypeMapKey;

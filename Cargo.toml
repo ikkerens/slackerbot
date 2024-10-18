@@ -9,9 +9,8 @@ members = [".", "entity", "migration"]
 [dependencies]
 # Runtime
 anyhow = "1"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Discord
 # Serenity broke again, pending release of a version newer than June 9
@@ -40,10 +39,11 @@ sha2 = "0.10"
 
 # TLDR command
 chatgpt_rs = "1.2"
-tiktoken-rs = { version = "0.5", features = ["async-openai"] }
+tiktoken-rs = { version = "0.6", features = ["async-openai"] }
 
 # Util
 rand = "0.8"
+rs_utils = { git = "https://github.com/ikkerens/rs-utils"}
 
 [profile.release]
 lto = true
