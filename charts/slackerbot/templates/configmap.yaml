@@ -5,4 +5,4 @@ metadata:
 data:
   OAUTH_CLIENT: {{ .Values.appConfig.oauthClientId | quote }}
   OAUTH_REDIRECT: https://{{ .Values.appConfig.hostname }}/oauth/redirect
-  WEB_WHITELIST_GUILD_ID: {{ .Values.appConfig.oauthClientId | quote }}
+  WEB_WHITELIST_GUILD_ID: {{ .Values.appConfig.webWhitelistGuildId | quote }}
