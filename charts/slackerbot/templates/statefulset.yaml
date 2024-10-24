@@ -48,5 +48,6 @@ spec:
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: { }
+      serviceAccountName: {{ include "slackerbot.fullname" . }}
       terminationGracePeriodSeconds: 30
 
