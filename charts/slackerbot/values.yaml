@@ -18,3 +18,5 @@ appConfig:
   tlsSecretName: ""
   oauthClientId: ""
   webWhitelistGuildId: ""
+
+annotations: { }
