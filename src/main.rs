@@ -105,11 +105,11 @@ async fn main() {
 
     info!("Setup complete. Starting bot...");
     select! {
-        _ = wait_for_signal() => {},
+        _ = wait_for_signal() => {
+            discord_client.shard_manager.shutdown_all().await
+        },
         result = discord_client.start_autosharded() => {
             exit_on_error(result, "Discord client returned error");
         }
     }
-
-    discord_client.shard_manager.shutdown_all().await
 }

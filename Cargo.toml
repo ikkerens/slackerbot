@@ -13,9 +13,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1"
 
 # Discord
-# Serenity broke again, pending release of a version newer than June 9
-# serenity = { version = "0.12", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "rustls_backend"] }
-serenity = { git = "https://github.com/serenity-rs/serenity", branch = "current", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "rustls_backend"] }
+serenity = { version = "0.12", default-features = false, features = ["builder", "client", "gateway", "http", "cache", "temp_cache", "model", "utils", "chrono", "rustls_backend"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "gzip", "rustls-tls"] }
 chrono = "0.4"
 
@@ -25,7 +23,7 @@ entity = { path = "./entity" }
 migration = { path = "./migration" }
 
 # Web
-actix-web = "4.6"
+actix-web = "4.9"
 actix-files = "0.6"
 handlebars = { version = "6", features = ["dir_source"] }
 serde = "1.0"
