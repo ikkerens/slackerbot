@@ -15,7 +15,7 @@ use entity::quote;
 
 use crate::util::convert_bytes_to_attachment;
 
-pub(crate) async fn post_quote<'a>(
+pub(crate) async fn post_quote(
     ctx: &Context,
     quote: quote::Model,
     channel: ChannelId,

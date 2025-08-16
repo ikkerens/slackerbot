@@ -1,5 +1,3 @@
-use std::cmp::min;
-
 use anyhow::Result;
 use chatgpt::types::{ChatMessage, Role};
 use chrono::{Duration, Utc};
@@ -9,6 +7,7 @@ use serenity::{
     client::Context,
     futures::StreamExt,
 };
+use std::{cmp::min, slice::from_ref};
 use tiktoken_rs::CoreBPE;
 
 use crate::{
@@ -148,7 +147,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     for message in messages.into_iter().rev() {
         // Convert it into a GPT message
         let gpt_message = message_to_gpt_message(&ctx, message).await?;
-        let cost = num_tokens_from_messages(&bpe, &[gpt_message.clone()])?;
+        let cost = num_tokens_from_messages(&bpe, from_ref(&gpt_message))?;
 
         // Count the tokens, if we exceed 4096 total we stop accepting more messages
         if cost >= remaining {
