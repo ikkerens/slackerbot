@@ -1,6 +1,9 @@
 use anyhow::{anyhow, Result};
 use rand::{seq::SliceRandom, thread_rng};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
+use sea_orm::{
+    sea_query::{Expr, ExprTrait, Func},
+    ColumnTrait, EntityTrait, QueryFilter, QuerySelect,
+};
 use serenity::{
     all::{Command, CommandDataOptionValue, CommandInteraction, CommandOptionType},
     builder::{CreateCommand, CreateCommandOption},
@@ -40,7 +43,9 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         .select_only()
         .column(quote::Column::Id)
         .filter(quote::Column::ServerId.eq(guild_id.get()))
-        .filter(quote::Column::Text.contains(keyword))
+        .filter(
+            Func::lower(Expr::col((quote::Entity, quote::Column::Text))).like(format!("%{}%", keyword.to_lowercase())),
+        )
         .into_tuple()
         .all(&db)
         .await?;
