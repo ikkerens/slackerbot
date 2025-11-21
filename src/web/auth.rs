@@ -5,8 +5,8 @@ use anyhow::Result;
 use hmac::{digest::KeyInit, Hmac};
 use jwt::{SignWithKey, VerifyWithKey};
 use oauth2::{
-    basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
-    RedirectUrl, Scope, TokenResponse, TokenUrl,
+    basic::BasicClient, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken,
+    RedirectUrl, Scope, TokenResponse, TokenUrl, EndpointSet, EndpointNotSet,
 };
 use reqwest::StatusCode;
 use serde::Deserialize;
@@ -19,9 +19,13 @@ use serenity::{
 };
 use sha2::Sha256;
 
+// Type alias for a BasicClient with auth and token endpoints configured
+type ConfiguredOAuthClient = BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet>;
+
 #[derive(Clone)]
 pub(crate) struct Client {
-    oauth: BasicClient,
+    oauth: ConfiguredOAuthClient,
+    http_client: reqwest::Client,
     key: Hmac<Sha256>,
     discord: Arc<Http>,
     web_whitelist_guild_id: GuildId,
@@ -36,17 +40,19 @@ impl Client {
         discord: Arc<Http>,
         web_whitelist_guild_id: GuildId,
     ) -> Result<Self> {
-        let oauth = BasicClient::new(
-            ClientId::new(client_id),
-            Some(ClientSecret::new(client_secret)),
-            AuthUrl::new("https://discord.com/oauth2/authorize".to_string())?,
-            Some(TokenUrl::new("https://discord.com/api/oauth2/token".to_string())?),
-        )
-        .set_redirect_uri(RedirectUrl::new(redirect_url)?);
+        let oauth = BasicClient::new(ClientId::new(client_id))
+            .set_client_secret(ClientSecret::new(client_secret))
+            .set_auth_uri(AuthUrl::new("https://discord.com/api/oauth2/authorize".to_string())?)
+            .set_token_uri(TokenUrl::new("https://discord.com/api/oauth2/token".to_string())?)
+            .set_redirect_uri(RedirectUrl::new(redirect_url)?);
+
+        let http_client = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?;
 
         let key: Hmac<Sha256> = Hmac::new_from_slice(cookie_secret.as_bytes())?;
 
-        Ok(Self { oauth, key, discord, web_whitelist_guild_id })
+        Ok(Self { oauth, http_client, key, discord, web_whitelist_guild_id })
     }
 
     pub async fn verify(&self, req: HttpRequest) -> Option<HttpResponse> {
@@ -95,7 +101,7 @@ pub(super) async fn oauth_redirect(
     };
 
     let Ok(token_result) = auth.oauth.exchange_code(AuthorizationCode::new(response.code.clone()))
-        .request_async(async_http_client).await else { return bad_request("token_fail") };
+        .request_async(&auth.http_client).await else { return bad_request("token_fail") };
     let Ok(me_response) = reqwest::Client::new().get("https://discord.com/api/oauth2/@me").header("Authorization", format!("Bearer {}", token_result.access_token().secret()))
         .send().await else { return bad_request("me_fail") };
     if me_response.status() != StatusCode::OK {

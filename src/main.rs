@@ -70,7 +70,7 @@ async fn main() {
     let chatgpt = exit_on_error(ChatGPT::new_with_config(
         get_env_exit("CHATGPT_TOKEN"),
         exit_on_error(ModelConfigurationBuilder::default()
-                          .engine(ChatGPTEngine::Custom("gpt-4o"))
+                          .engine(ChatGPTEngine::Custom("gpt-5.1"))
                           .timeout(Duration::from_secs(60))
                           .max_tokens(tldr::GPT_MAX_RESPONSE)
                           .build(), "Could not build ChatGPT model configuration"),

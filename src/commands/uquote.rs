@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use rand::{seq::SliceRandom, thread_rng};
+use rand::{rng, seq::IndexedRandom};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serenity::{
     all::{Command, CommandDataOptionValue, CommandInteraction, CommandOptionType},
@@ -44,7 +44,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         .into_tuple()
         .all(&db)
         .await?;
-    let Some(chosen_random) = ids.choose(&mut thread_rng()) else {
+    let Some(chosen_random) = ids.choose(&mut rng()) else {
         return send_ephemeral_message(ctx, cmd, "Could not find any random quotes for that user, do none exist?")
             .await;
     };

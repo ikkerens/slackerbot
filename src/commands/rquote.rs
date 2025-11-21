@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, sync::OnceLock};
 
 use anyhow::{anyhow, Result};
-use rand::{seq::IteratorRandom, thread_rng};
+use rand::{rng, seq::IteratorRandom};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QuerySelect};
 use serenity::{
     all::{Command, CommandInteraction},
@@ -44,7 +44,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
     let mut blacklist = RANDOM_BLACKLIST.get_or_init(Default::default).lock().await;
 
     // Then we filter our id list and choose a random quote
-    let Some(chosen_random) = ids.iter().filter(|v| !blacklist.contains(*v)).choose(&mut thread_rng()) else {
+    let Some(chosen_random) = ids.iter().filter(|v| !blacklist.contains(*v)).choose(&mut rng()) else {
         drop(blacklist); // Drop our blacklist reference early
         return send_ephemeral_message(ctx, cmd, "Could not find any random quotes, do none exist?").await;
     };

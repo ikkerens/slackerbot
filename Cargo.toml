@@ -30,17 +30,17 @@ serde = "1.0"
 serde_json = "1.0"
 
 # Web authentication
-oauth2 = "4.4"
+oauth2 = "5"
 jwt = "0.16"
 hmac = "0.12"
 sha2 = "0.10"
 
 # TLDR command
 chatgpt_rs = "1.2"
-tiktoken-rs = { version = "0.7", features = ["async-openai"] }
+tiktoken-rs = { version = "0.9", features = ["async-openai"] }
 
 # Util
-rand = "0.8"
+rand = "0.9"
 rs_utils = { git = "https://github.com/ikkerens/rs-utils"}
 
 [profile.release]

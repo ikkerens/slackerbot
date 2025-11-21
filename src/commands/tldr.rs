@@ -100,7 +100,7 @@ pub(super) async fn handle_command(ctx: Context, cmd: CommandInteraction) -> Res
         if message.content.is_empty() {
             continue;
         }
-        // Make sure the guild is is set
+        // Make sure the guild is set
         if message.guild_id.is_none() {
             message.guild_id = Some(channel.guild_id);
         }
