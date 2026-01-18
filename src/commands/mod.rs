@@ -6,6 +6,7 @@ use serenity::{
 };
 
 pub(crate) use ccounter::handle_ingress as handle_ccounter_ingress;
+pub(crate) use mia::press_loop as mia_press_loop;
 pub(crate) use rolebuttons::button::press_loop as rolebutton_press_loop;
 pub(crate) use rolebuttons::post::check_for_update as rolebutton_post_check_for_update;
 
@@ -16,6 +17,7 @@ mod cquote;
 mod delete;
 mod kwquote;
 mod lamia;
+mod mia;
 mod purge;
 mod quote;
 mod readycheck;
@@ -33,6 +35,7 @@ pub(crate) async fn introduce_commands(ctx: &Context) -> Result<()> {
     purge::register(ctx).await?;
     quote::register(ctx).await?;
     lamia::register(ctx).await?;
+    mia::register(ctx).await?;
     readycheck::register(ctx).await?;
     rolebuttons::register(ctx).await?;
     rquote::register(ctx).await?;
@@ -53,6 +56,7 @@ pub(crate) async fn handle_command(handler: &Handler, ctx: Context, cmd: Command
         "purge" => purge::handle_command(ctx, cmd).await,
         "quote" => quote::handle_command(ctx, cmd).await,
         "days_since_lamia_horny" => lamia::handle_command(ctx, cmd).await,
+        "mia" => mia::handle_command(ctx, cmd).await,
         "readycheck" => readycheck::handle_command(handler, ctx, cmd).await,
         "rolebuttons" => rolebuttons::handle_command(ctx, cmd).await,
         "rquote" => rquote::handle_command(ctx, cmd).await,

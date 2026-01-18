@@ -12,7 +12,7 @@ use serenity::{
 use tokio::{join, sync::broadcast};
 
 use crate::{
-    commands::{handle_ccounter_ingress, handle_command, introduce_commands, rolebutton_press_loop},
+    commands::{handle_ccounter_ingress, handle_command, introduce_commands, mia_press_loop, rolebutton_press_loop},
     db_integrity,
     ingest::reaction,
 };
@@ -25,8 +25,9 @@ pub(crate) struct Handler {
 
 impl Handler {
     pub fn new() -> Self {
-        let (sender, recv) = broadcast::channel(16);
-        tokio::spawn(rolebutton_press_loop(recv));
+        let (sender, rolebutton_recv) = broadcast::channel(16);
+        tokio::spawn(rolebutton_press_loop(rolebutton_recv));
+        tokio::spawn(mia_press_loop(sender.subscribe()));
         Self { component_interactions: sender }
     }
 

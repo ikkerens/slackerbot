@@ -191,7 +191,7 @@ async fn message_to_gpt_message(ctx: &Context, msg: Message) -> Result<ChatMessa
 
 fn resolve_name<'a>(user: &'a User, member: Option<&'a Member>) -> &'a str {
     member.map_or_else(
-        || user.global_name.as_deref().map_or_else(|| user.name.as_str(), |nick| nick),
+        || user.global_name.as_deref().unwrap_or(user.name.as_str()),
         |m| m.display_name(),
     )
 }
