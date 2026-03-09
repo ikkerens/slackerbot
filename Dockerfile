@@ -2,7 +2,7 @@
 ARG PROJECT_NAME=slackerbot
 ARG BUILD_TYPE=debug
 
-FROM rust:1.92.0-alpine3.22 AS base_debug
+FROM rust:1.94.0-alpine3.23 AS base_debug
 ENV RUSTFLAGS=""
 ARG RELEASE_MODE=""
 
