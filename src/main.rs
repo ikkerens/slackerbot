@@ -70,6 +70,7 @@ async fn main() {
         get_env_exit("CHATGPT_TOKEN"),
         exit_on_error(ModelConfigurationBuilder::default()
                           .engine(ChatGPTEngine::Custom("gpt-5-nano"))
+                          .temperature(1.0)
                           .timeout(Duration::from_secs(60))
                           .build(), "Could not build ChatGPT model configuration"),
     ), "Could not initialize ChatGPT client");
